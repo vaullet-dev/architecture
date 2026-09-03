@@ -172,14 +172,23 @@ individually sound decisions can still contradict. Six did, and all six are fixe
 
 ## Still open
 
-- **Human/operational access control** — `kubectl exec`, database credentials, break-glass. Explicitly
-  out of ADR-008's scope; needs its own decision.
-- **Warehouse rebuild vs. retention** — ADR-007 resolved this by making money-topic retention
-  indefinite (tiered storage), because ADR-003's 2-hour rebuild objective is false under a 7-day
-  window. The cost is per customer cluster and has not been sized.
-- **Operator reporting surface** — dashboard vs API vs embeddable widgets. A product question, not an
-  auth one. The auth half is settled (Admin UI is role-scoped; BI reads `datawarehouse_db` via
-  read-only credentials).
+The full register is **[`/docs/adr/TODO.md`](adr/TODO.md)** — 4 blocking contradictions (B1–B4),
+8 decisions needing an ADR (D1–D8), 5 accepted gaps (G1–G5), and 6 deferred re-evaluations with
+triggers (R1–R6). The ones that shape what to build next:
+
+- **B1 · Withdrawal holds have no lifetime set.** The 2026-09-02 fix made hold lifetime caller-supplied
+  and gave the wagering path a value; the withdrawal path still inherits the 300-second default, so a
+  manually reviewed withdrawal releases its hold while the payout is pending. Same failure class the
+  review set out to remove, on a second path.
+- **B2/B3 · The account anchor has two creation paths**, and the operator-facing one cannot succeed as
+  specified (`keycloak_sub NOT NULL`); `external_ref` is specified with no column behind it.
+- **D1 · Manual ledger adjustments** — ADR-006 assigns the role and the two-principal rule, ADR-008
+  deliberately withdrew the scope because no endpoint exists. The control is written and the operation
+  is not; that is the next ADR.
+- **D2 · Human/operational access control** — `kubectl exec`, database credentials, break-glass.
+  Explicitly out of ADR-008's scope, and usually the first thing a licence auditor asks about.
+- **D6 · Disaster recovery** — ADR-003 asserts the warehouse is rebuildable; nothing says how
+  `vaullet_db` itself is backed up or restored.
 
 ---
 
