@@ -14,8 +14,9 @@
 **A closed-loop stored-value wallet platform.** Money enters by top-up, lives as a balance on an
 internal ledger, is spent inside one operator's ecosystem, and may be withdrawn — the machinery behind
 a game economy's purchased and earned currency, a marketplace's seller balances, or a loyalty
-programme's stored value. Single-tenant: each customer gets their own Kubernetes cluster. Modules are contract line
-items, and the promotional platform is the flagship.: each customer gets their own Kubernetes cluster. Modules are contract line
+programme's stored value. Single-tenant: each customer gets their own Kubernetes cluster. Modules are
+contract line items, and the promotional platform is the flagship.
+
 **This repository contains the architecture and the decision record. There is no implementation yet —
 deliberately.** The ledger design has already changed twice on paper, and paper is the cheap place for
 that to happen. See [ADR-001 → ADR-004](#the-decision-that-was-wrong) for why that is the point rather
