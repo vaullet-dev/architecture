@@ -50,6 +50,7 @@ ADRs document important architectural decisions made during the development of t
 | [010](010-polyrepo-cicd-and-gitops-delivery.md) | Polyrepo CI/CD and GitOps Delivery | ✅ Accepted | 2026-09-01 |
 | [011](011-api-versioning-and-openapi.md) | API Versioning and OpenAPI | ✅ Accepted (revised) | 2026-09-02 |
 | [012](012-external-api-surface.md) | External API Surface | ✅ Accepted (revised) | 2026-09-02 |
+| [013](013-backend-common-shared-library.md) | `backend-common` — Shared Runtime Plumbing, Split by Dependency Footprint | ✅ Accepted | 2026-09-04 |
 
 ## The 2026-09-02 pre-implementation review
 
