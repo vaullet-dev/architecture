@@ -826,18 +826,7 @@ and duplicated core logic. There is exactly one path money can move by, and ever
 
 ## Technology Stack
 
-- **Language**: Java 17+
-- **Framework**: Spring Boot 3.x
-- **Event Bus**: Apache Kafka
-- **Databases**: PostgreSQL (hybrid grouping — see ADR-003) + Elasticsearch (fraud patterns)
-- **Cache**: Redis
-- **API Gateway**: Spring Cloud Gateway / Kong
-- **Service Discovery**: Kubernetes native / Consul
-- **Monitoring**: Prometheus + Grafana
-- **Logging**: ELK Stack (Elasticsearch, Logstash, Kibana)
-- **Tracing**: Jaeger / Zipkin
-- **Container**: Docker
-- **Orchestration**: Kubernetes
+See [README.md, Technology](README.md#technology): every component by layer, with version and whether it is running, built or planned.
 
 ## Market Context and Comparable Systems
 

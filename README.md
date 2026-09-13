@@ -1,7 +1,7 @@
 # Vaullet
 
 ![Java 21](https://img.shields.io/badge/Java-21-007396?style=flat-square&logo=openjdk&logoColor=white)
-![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?style=flat-square&logo=springboot&logoColor=white)
+![Spring Boot 4](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F?style=flat-square&logo=springboot&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
 ![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-231F20?style=flat-square&logo=apachekafka&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white)
@@ -9,6 +9,8 @@
 ![Keycloak](https://img.shields.io/badge/Keycloak-4D4D4D?style=flat-square&logo=keycloak&logoColor=white)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=flat-square&logo=kubernetes&logoColor=white)
 ![Argo CD](https://img.shields.io/badge/Argo%20CD-EF7B4D?style=flat-square&logo=argo&logoColor=white)
+![Traefik](https://img.shields.io/badge/Traefik-24A1C1?style=flat-square&logo=traefikproxy&logoColor=white)
+![OpenBao](https://img.shields.io/badge/OpenBao-1B1B2E?style=flat-square&logo=openbao&logoColor=white)
 ![Linkerd](https://img.shields.io/badge/Linkerd-2BEDA7?style=flat-square&logo=linkerd&logoColor=black)
 
 **A closed-loop stored-value wallet platform.** Money enters by top-up, lives as a balance on an
@@ -113,46 +115,105 @@ and Keycloak — nine infrastructure components in a full deployment, seven in a
 
 ## Technology
 
-Every choice below is argued in an ADR rather than assumed, and several were argued *against* the
-obvious option.
+Grouped by layer, as of 2026-09-14. Status says how real each piece is:
 
-### Runtime
+- **running**: deployed on the cluster that serves [vaullet.dev](https://vaullet.dev).
+- **code**: built and tested in a repository, not deployed yet.
+- **planned**: decided in an ADR, nothing built.
 
-| | | |
-|---|---|---|
-| **Java 21** · **Spring Boot 3** | Services | Virtual threads suit a system that is mostly waiting on Postgres and Kafka |
-| **PostgreSQL** | System of record | The ledger's correctness rests on one `SELECT … FOR UPDATE` and two `CHECK` constraints — an overdraft is a schema violation, not a race the application has to win ([ADR-004](docs/adr/004-atomic-balance-reservations.md)) |
-| **Apache Kafka** | Event backbone | Not just transport: it is what makes modules removable. A consumer group that isn't deployed costs nothing, which is why optional functionality is only ever reached through events ([ADR-005](docs/adr/005-module-composition-and-deployment-topology.md), [ADR-007](docs/adr/007-kafka-topics-and-event-schema-evolution.md)) |
-| **Redis** | Cache, rate limiting, sessions | Deliberately *not* on the correctness path — it was, under the superseded ADR-001, and that was the bug |
-| **Elasticsearch** | Fraud pattern search | Core by inheritance, and [flagged as a cost worth revisiting](docs/adr/TODO.md) rather than defended |
-| **Keycloak** | Identity provider, per cluster | Credential storage, MFA, brute-force detection and OIDC conformance are not things to write yourself ([ADR-006](docs/adr/006-authentication-and-identity.md)) |
+Versions are copied from the file that pins them.
 
-### Contracts and APIs
+### Frontend
 
-| | | |
-|---|---|---|
-| **JSON Schema** + registry | Event contracts | Authored, registered `FULL_TRANSITIVE`, with Java and TypeScript generated from them — because a field removed in `v3` still exists in retained messages ([ADR-002](docs/adr/002-shared-contracts-versioning-strategy.md), [ADR-007](docs/adr/007-kafka-topics-and-event-schema-evolution.md)) |
-| **springdoc-openapi** + **oasdiff** | REST contracts | Code-first generation, one fragment per module, committed and diffed in CI — a breaking change to a published version fails the build ([ADR-011](docs/adr/011-api-versioning-and-openapi.md)) |
-| **Maven** + **NPM** | Distribution | Six per-domain artifact pairs, so a rewards change does not version the whole fleet |
-| **RFC 9457** Problem Details | Errors | Stable machine-readable codes, one catalogue |
+| Technology | Version | Status | Why |
+|---|---|---|---|
+| **HTML, CSS, JavaScript** | — | running | vaullet.dev is one hand-written page with no framework and no build step |
+| **nginx** | 1.27-alpine | running | Serves static files from a read-only, non-root container |
 
-### Platform
+### Backend
 
-| | | |
-|---|---|---|
-| **Kubernetes** | One cluster per customer | Isolation is the cluster boundary — no `tenant_id`, no shared infrastructure, no cross-customer data path |
-| **Helm** · **Terraform** | Composition | Module enablement is *build-time*: "not installed" is demonstrable to a regulator, "flag is false" requires trusting runtime state |
-| **Argo CD** | Delivery | Per cluster, pull-based, so the trust direction points outward and nothing reaches into a customer's environment ([ADR-010](docs/adr/010-polyrepo-cicd-and-gitops-delivery.md)) |
-| **GitHub Actions** | CI | One reusable workflow, fourteen callers, pinned by tag |
-| **Linkerd** | mTLS + L7 authorization | Chosen over Istio on cost: ~30 sidecars per cluster is 300–600 MB under Linkerd versus 1.5–3 GB under Istio — per customer, permanently ([ADR-008](docs/adr/008-service-to-service-authentication.md)) |
-| **cosign** · **SBOM** | Supply chain | Images signed, signatures verified at admission, immutable tags only |
+| Technology | Version | Status | Why |
+|---|---|---|---|
+| **Java** | 21 | code | Virtual threads suit services that mostly wait on Postgres and Kafka |
+| **Spring Boot** | 4.1.1 | code | Well understood, and deliberately not the interesting part |
+| **backend-common** | 0.1.1 | code | Error bodies, the JWT security chain, OpenAPI and test setup, shared as Maven artifacts instead of copied into each service ([ADR-013](docs/adr/013-backend-common-shared-library.md)) |
+| **Maven** · **japicmp** | japicmp 0.23.1 | code | A backend-common release that breaks its public API fails the build |
+| **springdoc-openapi** | 3.1.0 | code | OpenAPI generated from code, major version in the path ([ADR-011](docs/adr/011-api-versioning-and-openapi.md)) |
+| **RFC 9457** Problem Details | — | code | One error format with stable machine-readable codes |
+| **Flyway** | Boot-managed | code | Numbered migrations. Changing an applied one stops the service from starting |
+| **ArchUnit** | 1.4.1 | code | Enforces `api → service → dao` in the build |
+| **Testcontainers** | Boot-managed | code | Integration tests run against real PostgreSQL |
+| **JSON Schema** + registry | — | planned | Event contracts, with Java and TypeScript generated from them ([ADR-002](docs/adr/002-shared-contracts-versioning-strategy.md)) |
+
+### Data and events
+
+| Technology | Version | Status | Why |
+|---|---|---|---|
+| **PostgreSQL** | 18 | code | The ledger's correctness rests on one `SELECT … FOR UPDATE` and a `CHECK` constraint, so an overdraft is a schema violation ([ADR-004](docs/adr/004-atomic-balance-reservations.md)). Local and tests only; no database in the cluster yet |
+| **Apache Kafka** | — | planned | An undeployed consumer costs nothing, which is what makes modules removable ([ADR-005](docs/adr/005-module-composition-and-deployment-topology.md), [ADR-007](docs/adr/007-kafka-topics-and-event-schema-evolution.md)) |
+| **Redis** | — | planned | Cache and rate limiting, kept off the correctness path. The superseded ADR-001 put it there, and that was the bug |
+| **Elasticsearch** | — | planned | Fraud pattern search, flagged as a cost worth revisiting |
+
+### Security
+
+| Technology | Version | Status | Why |
+|---|---|---|---|
+| **OpenBao** | 2.6.2 | running | Holds every credential. Restarts sealed and needs two of three key holders to open |
+| **External Secrets Operator** | 2.10.0 | running | Copies credentials into Kubernetes Secrets, so no service talks to OpenBao. Each namespace reads only its own path |
+| **cert-manager** · **Let's Encrypt** | 1.21.1 | running | The public certificate, plus a private CA for OpenBao's TLS |
+| **Spring Security** | Boot-managed | code | One JWT resource-server chain in backend-common |
+| **Host hardening** | — | running | ufw, fail2ban, SSH keys only, unattended security updates |
+| **Keycloak** | — | planned | Identity provider per cluster. MFA and OIDC conformance are not things to write yourself ([ADR-006](docs/adr/006-authentication-and-identity.md)) |
+| **Linkerd** | — | planned | mTLS between services. ~30 sidecars cost 300–600 MB, against 1.5–3 GB under Istio ([ADR-008](docs/adr/008-service-to-service-authentication.md)) |
+| **cosign** · admission verification | — | planned | Signed images, checked before they run |
+
+### Infrastructure
+
+| Technology | Version | Status | Why |
+|---|---|---|---|
+| **Hetzner AX41** | — | running | One rented box: 6 cores, 64 GB ECC, mirrored NVMe. Production topology, not production grade |
+| **Ubuntu** | 26.04 LTS | running | Host OS |
+| **RKE2** | v1.36.4+rke2r1 | running | Cluster state in etcd, not a SQLite file. Single node |
+| **Kubernetes** | 1.36 | running | One cluster per customer: isolation is the cluster boundary, no `tenant_id` |
+| **Traefik** + **Gateway API** | 3.7.13 | running | No Ingress objects. Upstream retired ingress-nginx in March 2026 |
+| **local-path-provisioner** | 0.0.37 | running | The only StorageClass, on the RAID1 mirror |
+
+### DevOps
+
+| Technology | Version | Status | Why |
+|---|---|---|---|
+| **GitHub Actions** | — | running | One workflow per repo. Release versions come from commit messages |
+| **GHCR** | — | running | Images and Maven artifacts. Tags are immutable, so `git revert` is a real rollback |
+| **Docker Buildx** · **Cloud Native Buildpacks** | — | running | The web image ships with an SBOM and provenance. Services build with `spring-boot:build-image` |
+| **Dependency review** | — | running | Pull requests adding vulnerable dependencies fail |
+| **Terraform** | — | planned | A new customer environment is a plan and an apply |
+
+### GitOps
+
+| Technology | Version | Status | Why |
+|---|---|---|---|
+| **Argo CD** | 3.5.2 | running | Pulls each cluster from git, so nothing reaches into a customer's environment ([ADR-010](docs/adr/010-polyrepo-cicd-and-gitops-delivery.md)) |
+| **Argo Rollouts** | 1.10.0 | running | vaullet.dev deploys blue-green: new pods start, then every request switches at once |
+| **Helm** · **Kustomize** | — | running | Platform components are pinned chart versions in git. Services are Kustomize |
 
 ### Observability
 
-**Prometheus** + **Grafana**, **ELK**, **Jaeger**/**Zipkin**. The metrics that matter are named per
-service — the ledger's include `vaullet.reserve.latency.p95`, `vaullet.reconciliation.mismatch.count`
-(which must be zero) and `vaullet.held_ratio`. A platform-wide observability decision is
-[still open](docs/adr/TODO.md).
+| Technology | Version | Status | Why |
+|---|---|---|---|
+| **Prometheus** · **Grafana** | — | planned | The ledger's `vaullet.reconciliation.mismatch.count` must be zero |
+| **Jaeger** | — | planned | Tracing across the synchronous approval path |
+
+A platform-wide observability decision is [still open](docs/adr/TODO.md).
+
+### Where older documents disagree
+
+| Document | Says | What is true |
+|---|---|---|
+| ADR-010 §11 | ESO syncs from the customer's own secret store | ESO syncs from OpenBao in the cluster. A customer's own store stays possible by changing the store's provider |
+| ADR-010 | Flyway runs as a Helm pre-upgrade Job | Flyway runs when the service starts |
+| ADR-003 | One schema per service | Under review: one database per service |
+| ADR-004 | Balance buckets inside the ledger | Being replaced by separate accounts (cash, bonus) |
+| ADR-005, ADR-010 | Module composition with Helm and Terraform | Argo CD Applications over Helm and Kustomize, no Terraform |
 
 ## What this is not
 
