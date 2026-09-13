@@ -79,7 +79,7 @@ When `v2` ships, `v1` continues for **at least 12 months**, and every `v1` respo
 ```http
 Deprecation: @1788220800
 Sunset: Wed, 01 Sep 2027 00:00:00 GMT
-Link: <https://docs.vaullet/migrate/v1-to-v2>; rel="deprecation"
+Link: <https://docs.vaullet.dev/migrate/v1-to-v2>; rel="deprecation"
 ```
 
 Per RFC 9745 (`Deprecation`) and RFC 8594 (`Sunset`). Machine-readable, so an integrator's monitoring
@@ -181,7 +181,7 @@ integration, and integration time is a sales consideration.
 
 ```json
 {
-  "type":     "https://docs.vaullet/errors/insufficient-funds",
+  "type":     "https://docs.vaullet.dev/errors/insufficient-funds",
   "title":    "Insufficient funds",
   "status":   409,
   "detail":   "Available balance 40.00 EUR is less than requested 60.00 EUR",

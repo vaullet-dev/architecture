@@ -3,10 +3,13 @@
 ## Status
 
 **Accepted** (2026-09-04)
+**Revised** (2026-09-06) — §6 expanded: single-sourced `${revision}`, a japicmp gate that enforces
+the semver promise, and the non-Java surface the gate cannot see. Modules renamed
+`backend-common-*` → `common-*`.
 
 ## Context
 
-The ledger service was migrated onto the `@vaullet-io` template shape on 2026-09-04. Doing so made
+The ledger service was migrated onto the `@vaullet-dev` template shape on 2026-09-04. Doing so made
 something visible that a single service could hide: of the 2,763 lines of Java in
 `wallet-ledger-service`, 766 across fourteen files were not about the ledger at all. They are the
 error-response shape, the security chain, the CORS policy, the OpenAPI metadata, the Testcontainers
@@ -51,7 +54,7 @@ Any shared-library decision here has to answer that, or it reopens a settled one
 
 ## Decision
 
-We will create **`vaullet-io/backend-common`**: one repository, publishing **four artifacts split by
+We will create **`vaullet-dev/backend-common`**: one repository, publishing **four artifacts split by
 dependency footprint**, plus a BOM.
 
 ### 1. It shares plumbing, never contracts
@@ -66,7 +69,7 @@ dependency footprint**, plus a BOM.
 | Split by | Business domain | Dependency footprint |
 
 The one place they touch is the RFC 9457 problem shape, and the split is clean:
-`contracts-common`'s `Problem` is the type a **client** deserialises; `backend-common-web` produces
+`contracts-common`'s `Problem` is the type a **client** deserialises; `common-web` produces
 that body **server-side**. Neither generates the other.
 
 ### 2. Four artifacts, split by what they drag onto a classpath
@@ -77,11 +80,11 @@ couples by dependency.
 
 | Artifact | Contains | Drags in | Who skips it |
 |---|---|---|---|
-| `backend-common-core` | `ErrorType`, `ApplicationException` and general-purpose subclasses | `spring-web` (for `HttpStatus`), JSpecify | Nobody |
-| `backend-common-web` | problem+json advice, `ProblemDetails`, CORS, OpenAPI metadata, `platform-defaults.yaml` | `spring-boot-starter-webmvc`, validation, micrometer-tracing | A worker with no HTTP surface |
-| `backend-common-security` | JWT resource-server chain, Keycloak claim mapping, method security | `spring-boot-starter-security`, oauth2-resource-server | A service behind the mesh with no application-level authn |
-| `backend-common-test` | `@IntegrationTest`, PostgreSQL container, `JwtDecoder` stand-in, ArchUnit rules | Testcontainers, Boot test starters, ArchUnit | Nobody, and it is `test`-scoped |
-| `backend-common-bom` | Dependency management for the four | — | — |
+| `common-core` | `ErrorType`, `ApplicationException` and general-purpose subclasses | `spring-web` (for `HttpStatus`), JSpecify | Nobody |
+| `common-web` | problem+json advice, `ProblemDetails`, CORS, OpenAPI metadata, `platform-defaults.yaml` | `spring-boot-starter-webmvc`, validation, micrometer-tracing | A worker with no HTTP surface |
+| `common-security` | JWT resource-server chain, Keycloak claim mapping, method security | `spring-boot-starter-security`, oauth2-resource-server | A service behind the mesh with no application-level authn |
+| `common-test` | `@IntegrationTest`, PostgreSQL container, `JwtDecoder` stand-in, ArchUnit rules | Testcontainers, Boot test starters, ArchUnit | Nobody, and it is `test`-scoped |
+| `common-bom` | Dependency management for the four | — | — |
 
 **`core` carries the weight of the design.** A service layer throws `ApplicationException` subclasses
 and stays free of the web stack, which is what keeps the same rules callable from the Kafka listener
@@ -90,7 +93,7 @@ listener's classpath and the distinction would erode in a month.
 
 ### 3. Domain error codes stay in the service that owns them
 
-`ErrorType` is an **interface**, not the enum it was. `backend-common-core` ships `CommonErrorType`
+`ErrorType` is an **interface**, not the enum it was. `common-core` ships `CommonErrorType`
 (validation, not-found, conflict, busy, upstream, denied, internal); each service declares its own
 enum for its own vocabulary.
 
@@ -128,16 +131,48 @@ file importing it, so local settings still win; and one greppable line beats a r
 `application.yaml` seeing no mention of the Jackson naming strategy and reasonably concluding nothing
 sets it.
 
-### 6. Versioning and publishing
+### 6. Versioning: semantic, single-sourced, and gated by the build
 
-Semantic versioning, one version across the four modules — they share the `ErrorType` interface and
-the `vaullet.*` property prefix, so a mixed combination is not supported and the BOM makes it hard to
-assemble by accident. Published to GHCR Maven from a tag, as ADR-002 §"Publishing Workflow" does for
-contracts.
+Semantic versioning, one version across the four modules and the BOM — they share the `ErrorType`
+interface and the `vaullet.*` property prefix, so a mixed combination is not supported and the BOM
+makes it hard to assemble by accident. Published to GHCR Maven from a tag, as ADR-002
+§"Publishing Workflow" does for contracts; `main` additionally publishes `-SNAPSHOT`, so a consuming
+service can build against unreleased work without every developer running `mvn install` first.
 
 Unlike a contract artifact, an upgrade here is **never forced**: nothing about `backend-common` is on
 the wire, so a service on `1.2.0` and a service on `1.4.0` interoperate exactly as before. That is
 the property that makes the version stream tolerable.
+
+**The version has one home and is never committed as part of a release.** `<revision>` in the parent
+POM is the single declaration; `${revision}` is one of the three properties Maven resolves inside a
+`<version>` element, and `flatten-maven-plugin` substitutes the literal into every published POM. A
+release is therefore a tag plus `-Drevision=1.2.3`, with no POM-rewriting commit to forget, to
+conflict on, or to get half-right across six files.
+
+**The promise is enforced by the build, not by the README.** `japicmp` compares every module against
+its last release and fails when the number does not match the size of the change — a removal tagged
+`v1.4.1` stops in CI rather than reaching a consumer who trusted the patch digit. This is the same
+shape the platform already uses for its other contracts: `oasdiff` gating the OpenAPI document
+(ADR-011 §5), `FULL_TRANSITIVE` gating event schemas (ADR-007). A library's Java API has the identical
+property — the people a break lands on are not in the room when it happens.
+
+The gate is enabled for `0.x` as well. Semver permits `0.x` to break anything, which is precisely how
+a young library trains its consumers to expect churn; the discipline is cheaper to start with one
+consumer than to retrofit at `1.0` with fourteen.
+
+**What japicmp cannot see is written down instead.** This library's public surface is wider than its
+Java signatures, and three of the rows below are the ones that actually catch people:
+
+| Change | Bump | Why it is not obvious |
+|---|---|---|
+| Add a method to `ErrorType` | MAJOR | Services implement that interface; an addition breaks every implementor |
+| Change a `CommonErrorType` **code string** | MAJOR | Codes reach an integrator's `switch`. It is simultaneously an ADR-011 §4 break for every consuming service |
+| Change a behavioural value in `platform-defaults.yaml` | MAJOR | A service opted in with one import line and holds no local record of the value |
+| Rename or remove a `vaullet.*` property | MAJOR unless aliased | Configuration is API |
+| New public API, module, property with a default, or backing-off bean | MINOR | |
+| Bug fix, Javadoc, dependency patch | PATCH | |
+
+Those rows are a review question, and the table is why the review has something to point at.
 
 ## Consequences
 
@@ -263,4 +298,4 @@ and it needs enforcing in review.
 - [ADR-006](006-authentication-and-identity.md) — the Keycloak claim set the security module maps
 - [ADR-008](008-service-to-service-authentication.md) — the scopes on the money path
 - [ADR-011](011-api-versioning-and-openapi.md) — §7's error catalogue, §8's wire conventions
-- `vaullet-io/backend-common` — the repository, whose README is the adoption guide
+- `vaullet-dev/backend-common` — the repository, whose README is the adoption guide
