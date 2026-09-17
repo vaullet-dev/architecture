@@ -146,6 +146,19 @@ scope.
 |---|---|
 | Transaction Service → Vaullet `POST /reservations`, `DELETE /reservations` | `ledger:reserve` |
 | Admin UI → Risk Management account freeze | `risk:act` |
+| Admin UI, operator backend → Auth `GET /v1/accounts/**` | `identity:read` |
+| Admin UI, operator backend → Auth `POST`, `PATCH`, `PUT`, `DELETE /v1/accounts/**` | `identity:admin` |
+
+> **Added 2026-09-17** with [ADR-014](014-user-management-in-local-identity-mode.md). The two rows are
+> not paperwork: this table is the source the Keycloak client scopes and the mesh policy are generated
+> from, so an endpoint missing from it is unreachable in one direction and ungoverned in the other. No
+> client would be configured to request `identity:admin`, so no real token would carry it and
+> `@PreAuthorize` would refuse everyone — a 403 that reads like a bug in the service rather than a
+> missing row here.
+>
+> Scope alone is not the whole rule. Auth Service also requires `SUPER_ADMIN` to create an account and
+> `FRAUD_REVIEWER` to change its status, because ADR-006's separation of duties is what keeps user
+> administration from being able to lift a fraud freeze.
 
 > **Removed (2026-09-01)**: an earlier draft also granted `ledger:adjust` for "Vaullet manual
 > adjustments". No such endpoint exists — [ADR-004](004-atomic-balance-reservations.md)'s API is

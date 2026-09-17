@@ -6,6 +6,11 @@
 
 Implements the Category 4 adapter described in [ADR-005](005-module-composition-and-deployment-topology.md).
 
+**Amended by [ADR-014](014-user-management-in-local-identity-mode.md)** (2026-09-16, extended 2026-09-17): the `accounts`
+DDL below is superseded there — `keycloak_sub` is nullable, `external_ref` is added, and the status
+values are `ACTIVE | SUSPENDED | CLOSED`. ADR-014 also specifies user management under
+`auth.provider: local`, which this ADR names as a selling point but does not design.
+
 ## Context
 
 Vaullet is deployed one cluster per operator (ADR-005). Operators arrive in two shapes, and the
@@ -113,6 +118,11 @@ CREATE TABLE accounts (
 Created **just-in-time** on first successful authentication, in *both* modes, and written back to the
 Keycloak user as an attribute so the protocol mapper can emit it thereafter.
 
+> **Superseded by [ADR-014](014-user-management-in-local-identity-mode.md) §5.** `keycloak_sub` is
+> nullable, because an operator may provision an account before the user has ever logged in;
+> `external_ref` is a column; and `LOCKED` became `SUSPENDED` to match ADR-012 and to stop colliding
+> with Keycloak's own brute-force *temporarily locked* state. The reasoning below is unchanged.
+
 **Adopting Keycloak makes this table more necessary, not less.** There is now a third-party system's
 identifier in the chain. `keycloak_sub` is stable only as long as that Keycloak realm is; a realm
 re-import, a migration to another IdP, or an operator switching their upstream broker all change it.
@@ -145,8 +155,8 @@ limitation: the operator keeps their PII, and Vaullet's breach surface excludes 
 Tokens are short-lived (15 minutes) and **`accounts.status` is checked on every request** at the API
 Gateway, cached in Redis with explicit invalidation on change.
 
-`risk.account-locked` from Risk Management sets `status = 'LOCKED'` in Vaullet's own table and takes
-effect within one cache invalidation, in both modes.
+`risk.account-locked` from Risk Management sets `status = 'SUSPENDED'` (ADR-014 §5) in Vaullet's own
+table and takes effect within one cache invalidation, in both modes.
 
 **Keycloak's `enabled` flag is not the primary control**, and this is worth being explicit about
 because it is the obvious-looking shortcut. Three reasons it is insufficient:
@@ -379,7 +389,7 @@ regulated deployment.
 
 Keycloak gets its **own schema in `auth_db`** (`keycloak`), owned entirely by Keycloak and never
 written to by us — it runs its own migrations on upgrade. Vaullet's `accounts` anchor and `api_clients`
-live in a separate `identity` schema with separate credentials, consistent with the schema-per-service
+live in a separate `identity_schema` with separate credentials, consistent with the schema-per-service
 isolation in [ADR-003](003-hybrid-database-strategy-with-analytics.md).
 
 The coupling to watch is upgrade ordering: a Keycloak major upgrade migrates its schema, so the

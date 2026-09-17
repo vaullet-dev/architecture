@@ -484,16 +484,32 @@ queries an operational database — that is the whole point of the separation (A
 ### Security & Risk Services
 
 #### 7. **Auth Service** — CORE (thin adapter over Keycloak)
-**Role**: Authentication and authorization
+**Role**: The account anchor, and identity brokered to Keycloak
+
+> **Revised 2026-09-17.** The list below predates [ADR-006](docs/adr/006-authentication-and-identity.md)
+> and [ADR-014](docs/adr/014-user-management-in-local-identity-mode.md), and read as though this
+> service were an identity provider. It is not: **Keycloak is the only token signer in the platform**,
+> and this service brokers rather than mints. Login, MFA and session management are Keycloak's
+> entirely; what is left here is the record money is keyed to.
 
 **Responsibilities**:
-- User login/logout
-- JWT token generation and validation
-- Multi-factor authentication (MFA)
-- Session management
-- Permission checks
+- The account anchor — `account_id`, `keycloak_sub`, `external_ref`, `status` — and nothing else about a person
+- Just-in-time provisioning of that anchor on first authentication, in both identity modes
+- Account status enforcement, including the fraud freeze, which is authoritative **here** and not in Keycloak
+- A facade over the Keycloak Admin REST API for user management, under `auth.provider: local` only
+- Token exchange orchestration (RFC 8693) for operator backends
+- Publishing `identity.account-created.v1`, which is what gives the ledger its `account_balances` row
 
-**Database**: PostgreSQL + Redis (sessions)
+**Explicitly not**: credential storage, MFA enrolment, password policy, session state, or any personal
+data. Those are Keycloak's, in its own schema in the same database, read live rather than copied.
+
+**Database**: `auth_db` — `identity_schema` (ours: `accounts`, `api_clients`) alongside
+`keycloak_schema` (Keycloak's, migrated by Keycloak, never written by us). No foreign key crosses
+between them. Redis holds only the status cache the gateway reads, not sessions.
+
+**Status**: the anchor is implemented in [`wallet-auth-service`](../wallet-auth-service) — schema,
+repository, service and `/v1/accounts` — with 26 integration tests. Keycloak integration, the
+identity facade and token exchange are steps 2–5 of ADR-014's build order and are not written.
 
 ---
 

@@ -142,7 +142,8 @@ Versions are copied from the file that pins them.
 | **RFC 9457** Problem Details | — | code | One error format with stable machine-readable codes |
 | **Flyway** | Boot-managed | code | Numbered migrations. Changing an applied one stops the service from starting |
 | **ArchUnit** | 1.4.1 | code | Enforces `api → service → dao` in the build |
-| **Testcontainers** | Boot-managed | code | Integration tests run against real PostgreSQL |
+| **Testcontainers** | Boot-managed | code | Integration tests run against real PostgreSQL. Not H2: the parts carrying the correctness argument are PostgreSQL-specific — `SELECT … FOR UPDATE`, plpgsql triggers, partial unique indexes, NULLs-distinct uniqueness — and an embedded database that *accepts* the migration without enforcing it gives a green suite proving nothing |
+| **Jakarta Bean Validation** | Boot-managed | code | Rules that bind two fields live on a command object as a class-level constraint, so they hold for a Kafka listener as well as a controller |
 | **JSON Schema** + registry | — | planned | Event contracts, with Java and TypeScript generated from them ([ADR-002](docs/adr/002-shared-contracts-versioning-strategy.md)) |
 
 ### Data and events
@@ -264,9 +265,11 @@ a design-phase one.
 
 | | |
 |---|---|
-| Architecture | 12 ADRs, 1 superseded, reconciled against each other on 2026-09-02 |
-| Implementation | Not started — `contracts-common` is next |
-| Open items | [25 tracked](docs/adr/TODO.md) — 19 open, 6 deferred with triggers; 4 are blocking |
+| Architecture | 14 ADRs, 1 superseded, reconciled against each other on 2026-09-02 |
+| Implementation | Two services with code, neither deployed — [ledger](../wallet-ledger-service) (reservations) and [auth](../wallet-auth-service) (the account anchor), on a shared [backend-common](../backend-common) |
+| Tests | 44 integration tests against real PostgreSQL: 18 ledger, 26 auth |
+| Cluster | Argo CD and OpenBao running; no PostgreSQL, no Keycloak, no service deployed |
+| Open items | [24 tracked](docs/adr/TODO.md) — 16 open, 8 deferred with triggers; 2 are blocking |
 
 A private portfolio project, built to production-grade B2B standards: the goal is an architecture that
 survives review by a senior engineer, not a system that currently ships.
