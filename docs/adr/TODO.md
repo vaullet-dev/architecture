@@ -14,8 +14,9 @@ closed — a register nobody prunes stops being read.
 
 ## B — Blocking implementation
 
-Fix before writing the code each one touches. All four are contradictions between accepted decisions,
-not new decisions.
+Fix before writing the code each one touches. Both are contradictions between accepted decisions,
+not new decisions. **B2** (the anchor's two creation paths) and **B3** (`external_ref` has no column)
+were closed by [ADR-014](014-user-management-in-local-identity-mode.md) on 2026-09-16.
 
 ### B1 · Withdrawal holds have no lifetime set
 
@@ -31,30 +32,6 @@ not new decisions.
 - **Fix**: ADR-009 §4 states the withdrawal hold TTL explicitly, as a deployment setting rather than a
   constant — the review SLA belongs to the operator. Blocks the withdrawal path, not the ledger core.
 
-### B2 · The account anchor has two creation paths, and one cannot succeed
-
-- **Where**: [ADR-006](006-authentication-and-identity.md) *The account anchor* vs
-  [ADR-012](012-external-api-surface.md) §3
-- **What**: ADR-006 creates the anchor just-in-time on first successful authentication, with
-  `keycloak_sub UUID NOT NULL`. ADR-012 gives the operator `POST /v1/accounts → account_id`. An
-  operator provisioning a user who has never logged in has no `keycloak_sub` to supply.
-- **Why it matters**: as specified the insert fails, and this is on the first call of every
-  integration. It is also a real modelling question — whether an account can exist before an identity
-  does — not a typo.
-- **Fix**: either `keycloak_sub` is nullable until first login (and every reader handles an unlinked
-  anchor, including the ledger), or `POST /v1/accounts` is not account creation and ADR-012 says what
-  it is. Blocks Auth Service and the external API; does not block the ledger.
-
-### B3 · `external_ref` is specified but has no column
-
-- **Where**: ADR-012 §3 and *Alternative 5*, against ADR-006's `accounts` and
-  [ADR-003](003-hybrid-database-strategy-with-analytics.md) `identity_schema`
-- **What**: ADR-012 declares `external_ref` unique per deployment and immutable once set, and gives it
-  a lookup endpoint (`GET /v1/accounts/by-ref/{external_ref}`). No schema anywhere has the column.
-- **Why it matters**: uniqueness and immutability are constraint claims. Unless they are constraints,
-  they are hopes — and ADR-012 already commits to telling operators they cannot change the value.
-- **Fix**: add it to the anchor with `UNIQUE`, nullable, and no `UPDATE` path. Same change as B2.
-
 ### B4 · `ledger:reserve` scope table is incomplete
 
 - **Where**: [ADR-008](008-service-to-service-authentication.md) Layer 3
@@ -62,6 +39,9 @@ not new decisions.
   was added to ADR-004 on 2026-09-02 and is not in it.
 - **Why it matters**: small, but ADR-008's whole argument is that the money path is enumerated
   explicitly. An endpoint missing from the enumeration is either unauthorized or silently ungoverned.
+  The auth service met the sharper version of this on 2026-09-17: the table is what the Keycloak
+  client scopes are generated from, so a missing row means no token ever carries the scope and every
+  call 403s. Its two rows were added; this one was not.
 - **Fix**: one row. Decide whether reading a reservation needs `ledger:reserve` or a read scope.
 
 ---
@@ -158,7 +138,7 @@ Not scheduled. Recorded so they are not rediscovered as surprises.
 | **G1** | **Per-customer cost floor is high** — core alone is 7 services plus Kafka, Redis, Elasticsearch, Keycloak, Argo CD and 5 Postgres databases. Small operators may be unprofitable on this topology | ADR-005, ADR-010 | ADR-005 *Alternative 3* (modular monolith, compile-time module selection) is the documented candidate for a low-cost tier. Nobody has priced either |
 | **G2** | **Elasticsearch is core by inheritance** — Fraud Detection is core and ADR-003 gives it ES, so every customer runs an ES cluster | ADR-003, ADR-005 | Candidate: degrade pattern search to Postgres-only and make ES a Category 4 adapter |
 | **G3** | **Fourteen services is a lot for a solo project.** The module boundaries have commercial justification, but "sellable unit" and "separately deployed service" are not the same thing | ADR-005 | Accepted deliberately. The mitigation is build order, not architecture — ledger first, extract shared CI at the second service |
-| **G4** | **Indefinite money-topic retention has not been sized.** Tiered storage makes it affordable in principle; the per-cluster cost is unknown | ADR-007 §8 | Needs a number before a customer contract prices it |
+| **G4** | **Warehouse rebuild has no source beyond 90 days.** ADR-007 bounded money-topic retention on 2026-09-17, so ADR-003's "rebuildable from events" holds for 90 days only. The proposed resolution — rebuild from `vaullet_db`, which is the actual system of record — is written in ADR-007 §8 but **not yet recorded in ADR-003** | ADR-003, ADR-007 §8 | Decide before Reporting ETL is built. The retention number itself is settled |
 | **G5** | **Nothing enforces a coherent contract version set.** Six independently versioned artifacts mean a service can run `contracts-ledger` 2.3 with `contracts-transaction` 1.9. An architecture test forbids a *cycle*; nothing checks the *set* | ADR-002 | Candidate: a BOM the services import, so the set is chosen once |
 
 ---
@@ -186,8 +166,11 @@ the trigger is not forgotten.
 | **R4** | Path versioning over date-based (ADR-011 *Alternative 2*) | The integrator count grows into the hundreds |
 | **R5** | PostgreSQL for `datawarehouse_db` (ADR-003) | Reporting queries exceed ~5s → ClickHouse or TimescaleDB |
 | **R6** | 12 partitions on money topics (ADR-007 §6) | Increasing is a one-way door — changing it remaps keys to partitions |
+| **R7** | Identity reads are a pure facade over the Keycloak Admin API (ADR-014 *Alternative 1*) | An Admin UI user list exceeds ~1s, or an operator asks for a filter spanning `status` and a profile field → add a rebuildable read projection |
+| **R8** | No outbox: events are published after the commit, so a crash between the two loses one (surfaced by ADR-014 §7) | Before a **second** event producer exists. The ledger's idempotent upsert makes the first case self-repairing by accident, not by design |
 
 ---
 
 **Maintenance**: reviewed whenever an ADR is accepted or revised. Last full pass 2026-09-02, against
-ADRs 001–012 and `arch.md`.
+ADRs 001–012 and `arch.md`. B2/B3 pruned 2026-09-16 on ADR-014; R8 added 2026-09-17 when the auth
+service's first event producer made the outbox gap concrete.

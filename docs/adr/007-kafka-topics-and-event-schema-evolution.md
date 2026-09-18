@@ -205,7 +205,7 @@ Where one service consumes a topic for two independent purposes, `<service-name>
 
 | Topic class | Retention | Rationale |
 |---|---|---|
-| Money movement (`transaction.*`, `ledger.*`, `refund.*`, `rewards.*`, `bonus.*`) | **Tiered, indefinite** | See below |
+| Money movement (`transaction.*`, `ledger.*`, `refund.*`, `rewards.*`, `bonus.*`) | **90 days** *(revised 2026-09-17, was "tiered, indefinite")* | See below |
 | Risk and fraud (`fraud.*`, `risk.*`) | 90 days | Investigation window |
 | Operational (`limits.*`, `auth.*`, `scheduler.*`) | 7 days | Transport only |
 | Config / state-carrying | Compacted | Latest value per key is the point |
@@ -221,6 +221,36 @@ is attempted under pressure. Either the events outlive the warehouse or ADR-003'
 false. Tiered storage (local SSD hot, object storage cold) makes indefinite retention affordable, and
 the alternative — sourcing rebuilds from operational databases — reintroduces exactly the coupling
 ADR-003 separated them to avoid.
+
+> **Revised 2026-09-17: money topics retain for 90 days, not indefinitely.**
+>
+> Tiered storage needs an object store for the cold tier. There is none on the machine and
+> [ADR-015](015-cluster-topology-three-servers-on-one-machine.md) admits no spend. The array has
+> 401 GB free, of which roughly **220 GB remains after the three VM root disks** — for PostgreSQL,
+> every Kafka topic, and everything else. The soak-test plan had already sized bounded retention at
+> ~1.2 TB: **five times what exists.**
+>
+> 90 days is chosen as a deliberate limit rather than a number the disk forced. Indefinite retention
+> on a staging-grade cluster is storage nobody is reading, and an unbounded topic is a slow outage
+> with a date on it.
+>
+> **This breaks the paragraph above, and the break has to be resolved rather than noted.** ADR-003
+> claims `datawarehouse_db` is rebuildable from events; with a 90-day bound that is true for 90 days
+> and false before. The resolution follows from this ADR's own first sentence — *"Kafka is transport,
+> not the system of record"*:
+>
+> **Rebuild the warehouse from `vaullet_db`, not from Kafka.** `ledger_entries` is append-only and
+> retained seven years by decision (ADR-004); it *is* the record. Depending on a transport buffer to
+> still be holding seven-year-old messages was treating Kafka as the system of record this ADR
+> explicitly says it is not. Retention then only has to cover replay, reprocessing and consumer lag —
+> days, not years — and 90 is generous for that.
+>
+> The cost is honest and should be stated: the warehouse ETL gains a batch path from an operational
+> database, which is coupling ADR-003 separated them to avoid. **Needs a decision recorded in ADR-003
+> before Reporting ETL is built.**
+>
+> **RF=3 is unaffected and becomes deliverable** with three nodes; on one node it was three replicas
+> on one disk. Tracked as **G4** in [TODO.md](TODO.md).
 
 ### 9. Topics introduced after this ADR
 

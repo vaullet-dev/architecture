@@ -230,6 +230,15 @@ user-scoped token through token exchange; it never carries ambient authority ove
 least two replicas for HA and Infinispan cache configuration. ADR-005 already flags the per-customer
 cost floor; this raises it, per customer.
 
+> **Now deliverable, 2026-09-17.** "Two replicas for HA" and the `PodDisruptionBudget` in the risk
+> table below were not achievable on a single-node cluster — two replicas on one node survive nothing,
+> and a PDB has nothing to protect against. [ADR-015](015-cluster-topology-three-servers-on-one-machine.md)
+> moves the reference cluster to three nodes, which makes both real: the replicas land on different
+> nodes and a drain respects the budget.
+>
+> The limit worth stating: those three nodes are VMs on one machine, so Keycloak survives a **node**
+> going away, not the hardware.
+
 ⚠️ **We inherit Keycloak's upgrade cadence.** Major versions have historically carried breaking
 configuration changes, and the upgrade must be tested per customer cluster.
 

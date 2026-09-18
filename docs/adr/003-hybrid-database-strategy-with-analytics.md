@@ -148,6 +148,28 @@ transactions_db
 
 **Technology**: PostgreSQL + Elasticsearch
 
+> **Elasticsearch is out, decided 2026-09-17. The replacement is deferred.**
+>
+> Elasticsearch has not been open source since 2021: SSPL / Elastic License 2.0, with AGPLv3 added as
+> a third option in 2024. **None of the three is permissive.** Vaullet ships into customer clusters
+> under contract — the same reasoning that rejected BSL-licensed HashiCorp Vault in favour of OpenBao.
+> Paying for, or asking a customer to accept, a licence of that shape is ruled out.
+>
+> **What replaces it is an open question, to be settled when Fraud Detection is built.** Two
+> candidates:
+>
+> - **PostgreSQL alone** — `tsvector` + GIN for search, `pg_trgm` for fuzzy matching, JSONB for
+>   case documents. Removes a core component outright: ~4 GiB, one technology, and a visible cut to
+>   ADR-005's per-customer floor. Viable only if "pattern detection" here does not actually need a
+>   search engine, which this ADR asserts but has never tested.
+> - **OpenSearch** — Apache 2.0, Linux Foundation since 2024. Query DSL and mappings port nearly
+>   unchanged from Elasticsearch; **client libraries do not.** Elastic's official clients check a
+>   product header and refuse to connect to anything else, so this is `opensearch-java` and
+>   `spring-data-opensearch`, not a drop-in dependency swap.
+>
+> **This is a core decision, not an optional one.** Fraud Detection is Category 1 in ADR-005, so
+> whatever is chosen ships to every customer.
+
 **Schema**:
 ```sql
 fraud_db (PostgreSQL)
@@ -530,6 +552,19 @@ public class ReportingETLService {
 | redis_cluster | Auth, Vaullet, Limits, Fraud | Redis Cluster | Sessions, counters, cache | High (ephemeral) | Yes (infrastructure) |
 
 **Total infrastructure (full deployment)**: 7 PostgreSQL databases + 1 Redis Cluster + 1 Elasticsearch cluster = **9 components**
+
+> **How many PostgreSQL *servers*? One.** Added 2026-09-17, because this document counts *databases*
+> and never says, and a reader reasonably assumes seven servers. Seven logical databases live in one
+> PostgreSQL instance, with a role per service and no cross-database grants. The isolation this ADR
+> argues for is therefore **logical, not physical** — separate credentials and separate schemas, one
+> process and one data directory.
+>
+> That follows from [ADR-015](015-cluster-topology-three-servers-on-one-machine.md): the platform is
+> three nodes on one machine, where seven PostgreSQL instances would be seven times the memory and
+> seven backup configurations for the same disk. It is also the shape a customer cluster takes, so it
+> is not a homelab compromise. Should one database's load ever justify its own instance, splitting it
+> out is a restore into a new cluster rather than a redesign — which is the property the
+> database-per-domain boundary was protecting in the first place.
 
 **Minimum (core-only contract)**: 5 PostgreSQL databases (`vaullet`, `transactions`, `fraud`, `auth`,
 `support`) + Redis + Elasticsearch = **7 components**
@@ -992,6 +1027,33 @@ in this evolution.
 | fraud_db | Daily snapshots | 90 days | 24 hours | 1 hour |
 | support_db | Daily snapshots | 30 days | 24 hours | 1 hour |
 | datawarehouse_db | Daily snapshots | 7 days | 24 hours | 2 hours (rebuildable from events) |
+
+> **The table above stays as the product requirement. The reference cluster does not meet it.**
+> Decided 2026-09-17, and written this way round on purpose: the requirement is not lowered to match
+> what one rented machine can do.
+>
+> **Why it cannot be met here.** PITR needs continuous WAL archiving to an object store. CloudNativePG
+> offers no volume-snapshot alternative on this cluster either — `local-path` is not a CSI driver that
+> supports snapshots, so there is no `VolumeSnapshotClass` at all. An object store means either paying
+> for one or running one on the same RAID1 array, and
+> [ADR-015](015-cluster-topology-three-servers-on-one-machine.md) admits no spend.
+>
+> **What the reference cluster runs instead**: a `pg_dump` CronJob to a local PVC, per database.
+>
+> | | Requirement | Reference cluster |
+> |---|---|---|
+> | Mechanism | Continuous WAL archiving, PITR | Logical dump on a schedule |
+> | `vaullet_db` RPO | 0 | **the dump interval** |
+> | Recovers a bad migration or a wrong `WHERE` | ✅ | ✅ *(to the last dump)* |
+> | Recovers losing the machine | ✅ | ❌ — the dump is on the same array |
+>
+> **The gap is one configuration change, not a redesign.** A customer deployment with object storage
+> points CloudNativePG's `barmanObjectStore` at it and gets the table above as written. The reference
+> cluster is a reduced configuration of the same design, which is the only form of this compromise
+> worth making — and the reason to keep the requirement here rather than edit it down.
+>
+> Dump volume is unmeasured. Watch it: it shares the array with everything else, and ADR-015 leaves
+> roughly 220 GB for all data.
 
 ---
 

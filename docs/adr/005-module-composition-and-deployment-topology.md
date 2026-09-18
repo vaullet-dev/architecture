@@ -142,6 +142,17 @@ Runtime flags remain, scoped to behaviour *within* a deployed module (campaign t
 
 ⚠️ **Per-customer cost floor is high.** Core alone is 7 services plus Kafka, Redis, Elasticsearch and several Postgres instances. Small operators may be unprofitable to serve on this topology.
 
+
+> **Measured, 2026-09-17.** The floor now has a number rather than an adjective. A core-only
+> deployment — 7 services, PostgreSQL, Kafka, Keycloak, Redis, Elasticsearch — is roughly **25 GiB of
+> memory requests**. On the reference machine (62.7 GiB, three nodes per
+> [ADR-015](015-cluster-topology-three-servers-on-one-machine.md), ~19% topology overhead) that leaves
+> ~51 GiB usable, so core fits with room. Adding all seven sellable modules takes it to ~35 GiB.
+>
+> Two things this makes concrete. **A customer who buys nothing still pays for ~25 GiB of
+> infrastructure**, which is the argument this consequence is making. And **the full 14-service set is
+> a development-cluster shape, not a customer one** — ADR-005's own rule is that a deployment is a
+> subset, so the box that has to run everything at once is the one that can least afford to.
 ⚠️ **Elasticsearch is core by inheritance.** Fraud Detection is core and ADR-003 gives it Postgres + Elasticsearch, so every customer runs an ES cluster. Worth revisiting: pattern search could degrade gracefully to Postgres-only for small deployments, making ES a Category 4 adapter.
 
 ⚠️ **Enabling a module needs a deploy** — accepted above.
