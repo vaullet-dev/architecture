@@ -553,18 +553,41 @@ public class ReportingETLService {
 
 **Total infrastructure (full deployment)**: 7 PostgreSQL databases + 1 Redis Cluster + 1 Elasticsearch cluster = **9 components**
 
-> **How many PostgreSQL *servers*? One.** Added 2026-09-17, because this document counts *databases*
-> and never says, and a reader reasonably assumes seven servers. Seven logical databases live in one
-> PostgreSQL instance, with a role per service and no cross-database grants. The isolation this ADR
-> argues for is therefore **logical, not physical** — separate credentials and separate schemas, one
-> process and one data directory.
+> **How many PostgreSQL *servers*? Three.** Revised 2026-09-18, superseding the "One" written here a
+> day earlier. That note was right that this document counts *databases* and never says how many
+> servers, and right that seven instances would be seven times the memory and seven backup
+> configurations. It reached the wrong number because it weighed **cost** and never asked what
+> isolation is actually *usable*.
 >
-> That follows from [ADR-015](015-cluster-topology-three-servers-on-one-machine.md): the platform is
-> three nodes on one machine, where seven PostgreSQL instances would be seven times the memory and
-> seven backup configurations for the same disk. It is also the shape a customer cluster takes, so it
-> is not a homelab compromise. Should one database's load ever justify its own instance, splitting it
-> out is a restore into a new cluster rather than a redesign — which is the property the
-> database-per-domain boundary was protecting in the first place.
+> **The grouping principle is the restore boundary**: databases that must be restored to the same
+> point in time belong in the same instance; databases that can be rewound independently may be
+> separated.
+>
+> Restoring `vaullet_db` to 09:00 while `transactions_db` stays at 11:00 leaves the ledger and the
+> transaction log disagreeing about money that exists. Those two can therefore *never* be restored
+> independently, so isolating them from each other buys nothing that could ever be spent. `auth_db`
+> has no such coupling — restoring identity without rewinding the ledger is coherent. That asymmetry,
+> not the component count, is what decides the grouping:
+>
+> | Cluster | Databases | Why together |
+> |---|---|---|
+> | `money` | `vaullet_db`, `transactions_db` | one restore unit; strictest durability |
+> | `platform` | `auth_db`, `support_db` | independent of money; no shared point-in-time |
+> | `analytics` | `fraud_db` *(+ `rewards_db`, `datawarehouse_db` when sold)* | read-heavy, relaxed durability |
+>
+> The isolation is now **physical between groups and logical within them** — a role per service and no
+> cross-database grants still holds inside each cluster. The measured cost of the extra two instances
+> is ~2 GiB of memory and two more backup targets, against ~37 GiB free; the cost the earlier note
+> feared was seven instances, not three.
+>
+> **As built, 2026-09-18.** CloudNativePG 1.30, PostgreSQL 18.6, one instance per cluster pinned to a
+> node (`local-path` binds a volume to a node permanently, so the placement is declared rather than
+> discovered). `dataChecksums` on and the **builtin** collation provider with `C.UTF-8` — both chosen
+> because neither can be changed after `initdb` without a dump and restore, and because glibc
+> collation changing between base images silently invalidates every text index built under the old
+> rules. Single instances are deliberate: `instances: 3` later is a number change that builds standbys
+> with `pg_basebackup`, not a redesign. What is accepted today is that draining the node holding a
+> primary is an outage for that group.
 
 **Minimum (core-only contract)**: 5 PostgreSQL databases (`vaullet`, `transactions`, `fraud`, `auth`,
 `support`) + Redis + Elasticsearch = **7 components**
@@ -1051,6 +1074,23 @@ in this evolution.
 > points CloudNativePG's `barmanObjectStore` at it and gets the table above as written. The reference
 > cluster is a reduced configuration of the same design, which is the only form of this compromise
 > worth making — and the reason to keep the requirement here rather than edit it down.
+>
+> **As built and DRILLED, 2026-09-18.** A `CronJob` in namespace `postgres` (`apps/db/postgres/backup.yaml`)
+> runs daily at 02:30 UTC in the server's own image, so `pg_dump` can never be version-skewed from the
+> server it dumps. Per cluster it writes `pg_dumpall --globals-only` plus one `-Fc` dump per database
+> to a `local-path` PVC pinned to **k8s-3** — the node holding `analytics`, chosen so losing that one
+> VM does not take both the money database and every backup of it. Losing the *host* still loses both;
+> that is the compromise this section already states.
+>
+> Two properties worth keeping if this is ever rewritten. Every dump is **verified at write time**
+> with `pg_restore -l`, which parses the table of contents, so a truncated file is caught the day it is
+> written rather than during a restore under pressure. And **pruning only runs after a clean
+> verification** — an old good dump beats a new broken one.
+>
+> The restore was **drilled, not assumed**, on 2026-09-18: an actual CronJob artifact restored in 38 ms,
+> and a 50,000-row round trip came back with an identical MD5 of the whole table. Measured throughput
+> was ~6 MB/s dumping and ~11 MB/s restoring, so a 1 GB `vaullet_db` is roughly three minutes out and
+> two back. That is the number to plan an incident around.
 >
 > Dump volume is unmeasured. Watch it: it shares the array with everything else, and ADR-015 leaves
 > roughly 220 GB for all data.
