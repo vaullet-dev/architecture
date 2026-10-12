@@ -150,10 +150,12 @@ Versions are copied from the file that pins them.
 
 | Technology | Version | Status | Why |
 |---|---|---|---|
-| **PostgreSQL** | 18 | code | The ledger's correctness rests on one `SELECT … FOR UPDATE` and a `CHECK` constraint, so an overdraft is a schema violation ([ADR-004](docs/adr/004-atomic-balance-reservations.md)). Local and tests only; no database in the cluster yet |
+| **PostgreSQL** | 18.6 | running | The ledger's correctness rests on one `SELECT … FOR UPDATE` and a `CHECK` constraint, so an overdraft is a schema violation ([ADR-004](docs/adr/004-atomic-balance-reservations.md)). Running since 2026-09-18: three clusters grouped by restore boundary, five databases, data checksums on and a version-stable `C.UTF-8` collation ([ADR-003](docs/adr/003-hybrid-database-strategy-with-analytics.md)) |
 | **Apache Kafka** | — | planned | An undeployed consumer costs nothing, which is what makes modules removable ([ADR-005](docs/adr/005-module-composition-and-deployment-topology.md), [ADR-007](docs/adr/007-kafka-topics-and-event-schema-evolution.md)) |
 | **Redis** | — | planned | Cache and rate limiting, kept off the correctness path. The superseded ADR-001 put it there, and that was the bug |
-| **Elasticsearch** | — | planned | Fraud pattern search, flagged as a cost worth revisiting |
+| **CloudNativePG** | 1.30.0 | running | Operator, not a StatefulSet: failover, switchover and minor upgrades stop being scripts somebody is on call for. Gives each instance its own volume, the only shape that works on node-local storage |
+| **`pg_dump` CronJob** | — | running | Daily logical backup, verified at write time with `pg_restore -l`. No object store means no WAL archive, so the RPO is the dump interval — stated rather than implied ([ADR-003](docs/adr/003-hybrid-database-strategy-with-analytics.md)) |
+| ~~**Elasticsearch**~~ | — | withdrawn | Out on 2026-09-17: SSPL / Elastic License 2.0 / AGPLv3, none permissive, and Vaullet ships into customer clusters. Replacement deferred to when Fraud Detection is built — OpenSearch, or PostgreSQL full-text alone ([ADR-003](docs/adr/003-hybrid-database-strategy-with-analytics.md)) |
 
 ### Security
 
@@ -172,12 +174,14 @@ Versions are copied from the file that pins them.
 
 | Technology | Version | Status | Why |
 |---|---|---|---|
-| **Hetzner AX41** | — | running | One rented box: 6 cores, 64 GB ECC, mirrored NVMe. Production topology, not production grade |
+| **Hetzner AX41** | — | running | One rented box: 6 cores, 64 GB ECC, mirrored NVMe. Production topology, not production grade — three VMs share one PSU, one board and one array |
 | **Ubuntu** | 26.04 LTS | running | Host OS |
-| **RKE2** | v1.36.4+rke2r1 | running | Cluster state in etcd, not a SQLite file. Single node |
+| **libvirt / KVM** | — | running | Three guests on the one machine, each with its own data disk so a full database cannot take the node's root filesystem with it ([ADR-015](docs/adr/015-cluster-topology-three-servers-on-one-machine.md)) |
+| **RKE2** | v1.36.4+rke2r1 | running | Cluster state in etcd, not a SQLite file. **Three server nodes** since 2026-09-17, left schedulable: etcd quorum, working PodDisruptionBudgets and live drains are real rather than described |
 | **Kubernetes** | 1.36 | running | One cluster per customer: isolation is the cluster boundary, no `tenant_id` |
 | **Traefik** + **Gateway API** | 3.7.13 | running | No Ingress objects. Upstream retired ingress-nginx in March 2026 |
-| **local-path-provisioner** | 0.0.37 | running | The only StorageClass, on the RAID1 mirror |
+| **HAProxy** | 3.2.9 | running | On the host, TCP passthrough to all three nodes. The machine has one public IPv4 and the guests have none; health checks mean a node going down is a logged `DOWN` rather than an outage. TLS still terminates in Traefik |
+| **local-path-provisioner** | 0.0.37 | running | The only StorageClass, node-local by design. Longhorn is rejected: replicating three ways onto one RAID1 array is write amplification for no durability ([ADR-015](docs/adr/015-cluster-topology-three-servers-on-one-machine.md)) |
 
 ### DevOps
 

@@ -76,6 +76,11 @@ Corrections, goodwill credits, dispute resolution, write-offs.
   auditor asks about first, and "we have mTLS between services" is not an answer to it. ADR-010 adds
   to the surface: whoever can merge to `wallet-gitops` can change what every customer runs.
 - **Depends on nothing** — can be written now.
+- **As of 2026-09-30** there are two ways into a database, and neither is the answer: the service's
+  own login (`auth_app`, password from OpenBao) through an SSH tunnel and `kubectl port-forward`, or
+  `kubectl exec … psql` as the superuser. The strategy has to settle: personal, named roles instead of
+  shared service logins; read-only by default (`pg_read_all_data`); how a write happens when one must
+  (break-glass: time-boxed, logged, reviewed); and where each person's credential lives (OpenBao).
 
 ### D3 · Data retention and archival
 
