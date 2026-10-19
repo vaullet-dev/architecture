@@ -47,6 +47,7 @@ than the excuse.
 | Document | What it is |
 |---|---|
 | [`arch.md`](arch.md) | System architecture — services, data flows, event topology, market positioning |
+| [`docs/schema/README.md`](docs/schema/README.md) | The two deployed databases, `auth_db` and `vaullet_db`, as their migrations leave them |
 | [`docs/adr/README.md`](docs/adr/README.md) | Twelve architecture decision records, indexed |
 | [`docs/adr/TODO.md`](docs/adr/TODO.md) | Everything unresolved, with IDs — contradictions, open decisions, accepted gaps |
 | [`docs/adr/HOW-TO-WRITE-ADRS.md`](docs/adr/HOW-TO-WRITE-ADRS.md) | The writing standard these follow |

@@ -1,0 +1,361 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="erd" viewBox="0 0 1230 1315" width="1230" height="1315" role="img" aria-label="Entity-relationship diagram of auth_db and vaullet_db. In auth_db, outbox references accounts, at most one account-created event per account. A relay posts each event to the ledger, which opens the wallets and the account_balances row for the same account_id. In vaullet_db, wallets, balance_buckets, reservations and ledger_entries reference account_balances; balance_buckets references wallets; reservation_allocations and ledger_entries reference balance_buckets and reservations." xmlns:c2pa="http://c2pa.org/manifest"><metadata><c2pa:manifest>AAAWgmp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAABZcanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYTpkNDNjZWRmNy01NGUyLTQ2YTQtOTVjNy02N2I4NTg0ZmU2NmEAAAADl2p1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAALxqdW1iAAAARGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaW5ncmVkaWVudC52MwAAAAAYYzJzaMDmkPlvZvE74wfHLsML0J0AAABwY2JvcqNpZGM6Zm9ybWF0bWltYWdlL3N2Zyt4bWxqaW5zdGFuY2VJRHgseG1wOmlpZDpkMjg5MmNiZi0yYTYyLTQ4YzAtOTEzOS01MzUxYzBhYzNkMmFscmVsYXRpb25zaGlwaHBhcmVudE9mAAAB4mp1bWIAAABBanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5hY3Rpb25zLnYyAAAAABhjMnNoPWO0s2baoj36ZCT4gG0AbQAAAZljYm9yomdhY3Rpb25zgqJmYWN0aW9ua2MycGEub3BlbmVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggK8ZLOCLink+SQ98FxbR7O5d/IH54W8CXYvepfMyTfkqkZmFjdGlvbngdY29tLmFudGhyb3BpYy5jbGF1ZGUucHJvdmlkZWRqcGFyYW1ldGVyc6F4H2NvbS5hbnRocm9waWMub3JpZ2luLWNvbmZpZGVuY2VndW5rbm93bmtkZXNjcmlwdGlvbnhmQ2xhdWRlIHByb3ZpZGVkIHRoaXMgZmlsZSBhdCB0aGUgcmVxdWVzdCBvZiBhIHVzZXIgYW5kIG1heSBoYXZlIGNyZWF0ZWQgb3IgbW9kaWZpZWQgdGhlIGZpbGUgY29udGVudHMubXNvZnR3YXJlQWdlbnShZG5hbWVmQ2xhdWRlcmFsbEFjdGlvbnNJbmNsdWRlZPUAAADIanVtYgAAAEBqdW1kY2JvcgARABCAAACqADibcRNjMnBhLmhhc2guZGF0YQAAAAAYYzJzaB//llZQdUK1gDGAJUfHzGEAAACAY2JvcqVjYWxnZnNoYTI1NmNwYWRMAAAAAAAAAAAAAAAAZGhhc2hYIF7ZHufYAoMVYAHgT5LfbMJdIHnpVZM6lXzeoe7OWcXNZG5hbWVuanVtYmYgbWFuaWZlc3RqZXhjbHVzaW9uc4GiZXN0YXJ0GQKiZmxlbmd0aBkeBAAAAj5qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACD2Nib3KlY2FsZ2ZzaGEyNTZpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOmQ0M2NlZGY3LTU0ZTItNDZhNC05NWM3LTY3Yjg1ODRmZTY2YS9jMnBhLnNpZ25hdHVyZWppbnN0YW5jZUlEeCx4bXA6aWlkOjVmYjIzZjA2LWVjMGQtNDMxNi05MjA1LTE3NWZiZjMxMjlmOXJjcmVhdGVkX2Fzc2VydGlvbnODomN1cmx4LXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaW5ncmVkaWVudC52M2RoYXNoWCArxks4IuKeT5JD3wXFtHs7l38gfnhbwJdi96l8zJN+SqJjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFggJQw+SZo0gHwOS3dLAW7RYLl6oUdSJuA5LSAXSb/LESCiY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFggyDEkHc6sFLol8UqtzeYKTQ5NOlRRkPqEf1QSGTxx6tV0Y2xhaW1fZ2VuZXJhdG9yX2luZm+jZG5hbWVvQW50aHJvcGljIEZpbGVzZ3ZlcnNpb25lMS4wLjBrc3BlY1ZlcnNpb25lMi40LjAAABA4anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAABAIY2JvctKEWQISogEmGCFZAgowggIGMIIBjaADAgECAhRA5aAK7sI50L64g/oGQgU9Z1UTADAKBggqhkjOPQQDAzBJMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEuMCwGA1UEAxMlQW50aHJvcGljIENvbnRlbnQgQ3JlZGVudGlhbHMgUm9vdCBDQTAeFw0yNjA4MDcxODQzNTZaFw0yODA4MDYxOTQzNTZaMEQxFzAVBgNVBAoTDkFudGhyb3BpYywgUEJDMSkwJwYDVQQDEyBBbnRocm9waWMgQ2xhdWRlIENvbnRlbnQgU2lnbmluZzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJh6CmvLUBgFFNU0vUKlOVtE6djd17L5SuwX0LemFisBM3dkd/3cyjxFA3Qo5S46fX0/ihY0VZ7mfb9KF703t5OjWDBWMA4GA1UdDwEB/wQEAwIHgDAVBgNVHSUEDjAMBgorBgEEAYPoXgIBMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUzlHiBIFOZFsj+OPEz5o+nMHXXMIwCgYIKoZIzj0EAwMDZwAwZAIwMXMdFJ4BetLLVY7ORuE9noqbbAZOZn/aArXyTwFAZfKrPzxF2vPoJNf1+UCdg1XGAjBwX1zd9WGqYkqmL5SFqw1QySjr1zJfpJM9+1rdDwSPLMOPOjKuiXjoU/pUUeG9RwmhY3BhZFkNngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPZYQIJydycuSv+ycdNprl8ygiPSp9KcmAt9DWI1JqNwVuBTP6ia+F+wuIf0/yowGX+AsZ+FzqQLeRO65B6o/KrBzGg=</c2pa:manifest></metadata>
+<style>
+  .tname, .cname, .ctype, .ctype-l, .mk, .mk-pk, .elabel { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace; }
+  .plabel, .psub, .tcount, .foot, .rlabel, .rlabel2, .lhead, .ltext { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+  .panel.auth { fill: #172029; } .panel.ledger { fill: #16211B; }
+  .plabel { font-size: 16px; font-weight: 600; fill: #E2EAE5; }
+  .psub { font-size: 12px; fill: #9AABA2; }
+  .card { fill: #1A221E; stroke: #36443D; stroke-width: 1; }
+  .head.auth { fill: #22303D; } .head.ledger { fill: #213129; }
+  .tname { font-size: 13px; font-weight: 600; fill: #E2EAE5; }
+  .tcount { font-size: 10.5px; fill: #8A9A91; }
+  .hair { stroke: #2B3731; stroke-width: 1; }
+  .cname { font-size: 12px; fill: #E2EAE5; } .pkname { font-weight: 600; }
+  .ctype, .ctype-l { font-size: 12px; fill: #8A9A91; }
+  .mk-pk { font-size: 9.5px; font-weight: 700; fill: #5BC79A; letter-spacing: .04em; }
+  .mk { font-size: 9.5px; font-weight: 600; fill: #8A9A91; letter-spacing: .04em; }
+  .foot { font-size: 11px; font-style: italic; fill: #9AABA2; }
+  .edge { fill: none; stroke: #7F9188; stroke-width: 1.3; stroke-linejoin: round; }
+  .mark { stroke: #7F9188; stroke-width: 1.3; } .mark-o { fill: #1A221E; stroke: #7F9188; stroke-width: 1.3; }
+  .elabel { font-size: 10.5px; fill: #9AABA2; }
+  .relay { fill: none; stroke: #E99355; stroke-width: 1.6; stroke-dasharray: 6 4; }
+  .relay-head, .relay-dot { fill: #E99355; }
+  .rlabel { font-size: 12px; font-weight: 600; fill: #F0A468; }
+  .rlabel2 { font-size: 11.5px; fill: #F0A468; }
+  .lhead { font-size: 12px; font-weight: 600; fill: #E2EAE5; letter-spacing: .06em; text-transform: uppercase; }
+  .ltext { font-size: 12px; fill: #9AABA2; }
+</style>
+<rect x="0" y="0" width="1230" height="1315" fill="#111714"/>
+<rect class="panel auth" x="20" y="20" width="790" height="467" rx="10"/>
+<text class="plabel" x="40" y="50">auth_db</text>
+<text class="psub" x="126" y="50">cluster platform · schema identity_schema · owner auth_migrator · wallet-auth-service</text>
+<path class="edge" d="M480.0,263.5 L431.0,263.5 Q425.0,263.5 425.0,257.5 L425.0,117.5 Q425.0,111.5 419.0,111.5 L370.0,111.5"/>
+<line class="mark" x1="473.0" y1="257.5" x2="473.0" y2="269.5"/><circle class="mark-o" cx="465.0" cy="263.5" r="3.6"/>
+<line class="mark" x1="377.0" y1="117.5" x2="377.0" y2="105.5"/><line class="mark" x1="381.0" y1="117.5" x2="381.0" y2="105.5"/>
+<rect class="panel ledger" x="20" y="543" width="1190" height="752" rx="10"/>
+<text class="plabel" x="40" y="573">vaullet_db</text>
+<text class="psub" x="156" y="573">cluster money · schema public · owner ledger_migrator · wallet-ledger-service</text>
+<path class="edge" d="M370.0,663.5 L394.0,663.5 Q400.0,663.5 400.0,657.5 L400.0,650.5 Q400.0,644.5 406.0,644.5 L480.0,644.5"/>
+<line class="mark" x1="383.0" y1="663.5" x2="370.0" y2="656.5"/><line class="mark" x1="383.0" y1="663.5" x2="370.0" y2="663.5"/><line class="mark" x1="383.0" y1="663.5" x2="370.0" y2="670.5"/><line class="mark" x1="387.0" y1="669.5" x2="387.0" y2="657.5"/>
+<line class="mark" x1="473.0" y1="638.5" x2="473.0" y2="650.5"/><line class="mark" x1="469.0" y1="638.5" x2="469.0" y2="650.5"/>
+<path class="edge" d="M340.0,887.0 L340.0,873.0 Q340.0,867.0 346.0,867.0 L439.0,867.0 Q445.0,867.0 445.0,861.0 L445.0,650.5 Q445.0,644.5 451.0,644.5 L480.0,644.5"/>
+<line class="mark" x1="340.0" y1="874.0" x2="333.0" y2="887.0"/><line class="mark" x1="340.0" y1="874.0" x2="340.0" y2="887.0"/><line class="mark" x1="340.0" y1="874.0" x2="347.0" y2="887.0"/><line class="mark" x1="346.0" y1="870.0" x2="334.0" y2="870.0"/>
+<line class="mark" x1="473.0" y1="638.5" x2="473.0" y2="650.5"/><line class="mark" x1="469.0" y1="638.5" x2="469.0" y2="650.5"/>
+<path class="edge" d="M890.0,663.5 L841.0,663.5 Q835.0,663.5 835.0,657.5 L835.0,650.5 Q835.0,644.5 829.0,644.5 L780.0,644.5"/>
+<line class="mark" x1="877.0" y1="663.5" x2="890.0" y2="670.5"/><line class="mark" x1="877.0" y1="663.5" x2="890.0" y2="663.5"/><line class="mark" x1="877.0" y1="663.5" x2="890.0" y2="656.5"/><line class="mark" x1="873.0" y1="657.5" x2="873.0" y2="669.5"/>
+<line class="mark" x1="787.0" y1="650.5" x2="787.0" y2="638.5"/><line class="mark" x1="791.0" y1="650.5" x2="791.0" y2="638.5"/>
+<path class="edge" d="M70.0,1135.5 L48.0,1135.5 Q42.0,1135.5 42.0,1129.5 L42.0,650.5 Q42.0,644.5 48.0,644.5 L70.0,644.5"/>
+<line class="mark" x1="57.0" y1="1135.5" x2="70.0" y2="1142.5"/><line class="mark" x1="57.0" y1="1135.5" x2="70.0" y2="1135.5"/><line class="mark" x1="57.0" y1="1135.5" x2="70.0" y2="1128.5"/><line class="mark" x1="53.0" y1="1129.5" x2="53.0" y2="1141.5"/>
+<line class="mark" x1="63.0" y1="638.5" x2="63.0" y2="650.5"/><line class="mark" x1="59.0" y1="638.5" x2="59.0" y2="650.5"/>
+<text class="elabel" transform="translate(36,890.0) rotate(-90)" text-anchor="middle">(wallet_id, account_id)</text>
+<path class="edge" d="M480.0,964.5 L428.0,964.5 Q422.0,964.5 422.0,958.5 L422.0,932.5 Q422.0,926.5 416.0,926.5 L370.0,926.5"/>
+<line class="mark" x1="467.0" y1="964.5" x2="480.0" y2="971.5"/><line class="mark" x1="467.0" y1="964.5" x2="480.0" y2="964.5"/><line class="mark" x1="467.0" y1="964.5" x2="480.0" y2="957.5"/><line class="mark" x1="463.0" y1="958.5" x2="463.0" y2="970.5"/>
+<line class="mark" x1="377.0" y1="932.5" x2="377.0" y2="920.5"/><line class="mark" x1="381.0" y1="932.5" x2="381.0" y2="920.5"/>
+<path class="edge" d="M540.0,887.0 L540.0,791.0"/>
+<line class="mark" x1="540.0" y1="874.0" x2="533.0" y2="887.0"/><line class="mark" x1="540.0" y1="874.0" x2="540.0" y2="887.0"/><line class="mark" x1="540.0" y1="874.0" x2="547.0" y2="887.0"/><line class="mark" x1="546.0" y1="870.0" x2="534.0" y2="870.0"/>
+<line class="mark" x1="534.0" y1="798.0" x2="546.0" y2="798.0"/><line class="mark" x1="534.0" y1="802.0" x2="546.0" y2="802.0"/>
+<path class="edge" d="M780.0,1021.5 L809.0,1021.5 Q815.0,1021.5 815.0,1015.5 L815.0,864.0 Q815.0,858.0 821.0,858.0 L974.0,858.0 Q980.0,858.0 980.0,852.0 L980.0,829.0"/>
+<line class="mark" x1="793.0" y1="1021.5" x2="780.0" y2="1014.5"/><line class="mark" x1="793.0" y1="1021.5" x2="780.0" y2="1021.5"/><line class="mark" x1="793.0" y1="1021.5" x2="780.0" y2="1028.5"/><line class="mark" x1="797.0" y1="1027.5" x2="797.0" y2="1015.5"/>
+<line class="mark" x1="974.0" y1="836.0" x2="986.0" y2="836.0"/><circle class="mark-o" cx="980.0" cy="844.0" r="3.6"/>
+<path class="edge" d="M1110.0,887.0 L1110.0,829.0"/>
+<line class="mark" x1="1110.0" y1="874.0" x2="1103.0" y2="887.0"/><line class="mark" x1="1110.0" y1="874.0" x2="1110.0" y2="887.0"/><line class="mark" x1="1110.0" y1="874.0" x2="1117.0" y2="887.0"/><line class="mark" x1="1116.0" y1="870.0" x2="1104.0" y2="870.0"/>
+<line class="mark" x1="1104.0" y1="836.0" x2="1116.0" y2="836.0"/><line class="mark" x1="1104.0" y1="840.0" x2="1116.0" y2="840.0"/>
+<path class="edge" d="M890.0,945.5 L856.0,945.5 Q850.0,945.5 850.0,951.5 L850.0,1267.0 Q850.0,1273.0 844.0,1273.0 L226.0,1273.0 Q220.0,1273.0 220.0,1267.0 L220.0,1251.0"/>
+<line class="mark" x1="877.0" y1="945.5" x2="890.0" y2="952.5"/><line class="mark" x1="877.0" y1="945.5" x2="890.0" y2="945.5"/><line class="mark" x1="877.0" y1="945.5" x2="890.0" y2="938.5"/><line class="mark" x1="873.0" y1="939.5" x2="873.0" y2="951.5"/>
+<line class="mark" x1="214.0" y1="1258.0" x2="226.0" y2="1258.0"/><line class="mark" x1="214.0" y1="1262.0" x2="226.0" y2="1262.0"/>
+<path class="relay" d="M705.0,467.0 L705.0,604.0"/>
+<polygon class="relay-head" points="705.0,604.0 700.0,595.0 710.0,595.0"/>
+<path class="relay" d="M705.0,587.0 L226.0,587.0 Q220.0,587.0 220.0,593.0 L220.0,604.0"/>
+<polygon class="relay-head" points="220.0,604.0 215.0,595.0 225.0,595.0"/>
+<circle class="relay-dot" cx="705.0" cy="587" r="3"/>
+<text class="rlabel" x="717.0" y="511.0">relay: POST /v1/wallets, REAL then BONUS</text>
+<text class="rlabel2" x="717.0" y="527.0">carries account_id · no foreign key across clusters</text>
+<g class="tbl">
+<rect class="card" x="70" y="72" width="300" height="220" rx="6"/>
+<path class="head auth" d="M70,102 V78 Q70,72 76,72 H364 Q370,72 370,78 V102 Z"/>
+<text class="tname" x="82" y="92">accounts</text>
+<text class="tcount" x="360" y="92" text-anchor="end">6 columns</text>
+<line class="hair" x1="70" y1="102" x2="370" y2="102"/>
+<text class="mk-pk" x="79" y="115.0">PK</text>
+<text class="cname pkname" x="116" y="115.5">account_id</text>
+<text class="ctype" x="360" y="115.5" text-anchor="end">uuid</text>
+<text class="mk" x="79" y="134.0">UQ</text>
+<text class="cname" x="116" y="134.5">keycloak_sub</text>
+<text class="ctype" x="360" y="134.5" text-anchor="end">uuid?</text>
+<text class="mk" x="79" y="153.0">UQ</text>
+<text class="cname" x="116" y="153.5">external_ref</text>
+<text class="ctype" x="360" y="153.5" text-anchor="end">text?</text>
+<text class="cname" x="116" y="172.5">status</text>
+<text class="ctype" x="360" y="172.5" text-anchor="end">text</text>
+<text class="cname" x="116" y="191.5">created_at</text>
+<text class="ctype" x="360" y="191.5" text-anchor="end">timestamptz</text>
+<text class="cname" x="116" y="210.5">updated_at</text>
+<text class="ctype" x="360" y="210.5" text-anchor="end">timestamptz</text>
+<line class="hair" x1="80" y1="220" x2="360" y2="220"/>
+<text class="foot" x="82" y="235">status: ACTIVE · SUSPENDED · CLOSED</text>
+<text class="foot" x="82" y="250">external_ref or keycloak_sub required</text>
+<text class="foot" x="82" y="265">trigger: external_ref fixed once set</text>
+<text class="foot" x="82" y="280">trigger: CLOSED is final</text>
+</g>
+<g class="tbl">
+<rect class="card" x="480" y="72" width="300" height="395" rx="6"/>
+<path class="head auth" d="M480,102 V78 Q480,72 486,72 H774 Q780,72 780,78 V102 Z"/>
+<text class="tname" x="492" y="92">outbox</text>
+<text class="tcount" x="770" y="92" text-anchor="end">16 columns</text>
+<line class="hair" x1="480" y1="102" x2="780" y2="102"/>
+<text class="mk-pk" x="489" y="115.0">PK</text>
+<text class="cname pkname" x="526" y="115.5">event_id</text>
+<text class="ctype" x="770" y="115.5" text-anchor="end">uuid</text>
+<text class="cname" x="526" y="134.5">event_type</text>
+<text class="ctype" x="770" y="134.5" text-anchor="end">text</text>
+<text class="cname" x="526" y="153.5">schema_version</text>
+<text class="ctype" x="770" y="153.5" text-anchor="end">text</text>
+<text class="cname" x="526" y="172.5">occurred_at</text>
+<text class="ctype" x="770" y="172.5" text-anchor="end">timestamptz</text>
+<text class="cname" x="526" y="191.5">producer_service</text>
+<text class="ctype" x="770" y="191.5" text-anchor="end">text</text>
+<text class="cname" x="526" y="210.5">producer_version</text>
+<text class="ctype" x="770" y="210.5" text-anchor="end">text?</text>
+<text class="cname" x="526" y="229.5">correlation_id</text>
+<text class="ctype" x="770" y="229.5" text-anchor="end">text?</text>
+<text class="cname" x="526" y="248.5">causation_id</text>
+<text class="ctype" x="770" y="248.5" text-anchor="end">text?</text>
+<text class="mk" x="489" y="267.0">FK</text>
+<text class="cname" x="526" y="267.5">account_id</text>
+<text class="ctype" x="770" y="267.5" text-anchor="end">uuid</text>
+<text class="cname" x="526" y="286.5">payload</text>
+<text class="ctype" x="770" y="286.5" text-anchor="end">jsonb</text>
+<text class="cname" x="526" y="305.5">queued_at</text>
+<text class="ctype" x="770" y="305.5" text-anchor="end">timestamptz</text>
+<text class="cname" x="526" y="324.5">attempts</text>
+<text class="ctype" x="770" y="324.5" text-anchor="end">integer</text>
+<text class="cname" x="526" y="343.5">next_attempt_at</text>
+<text class="ctype" x="770" y="343.5" text-anchor="end">timestamptz</text>
+<text class="cname" x="526" y="362.5">last_attempt_at</text>
+<text class="ctype" x="770" y="362.5" text-anchor="end">timestamptz?</text>
+<text class="cname" x="526" y="381.5">last_error</text>
+<text class="ctype" x="770" y="381.5" text-anchor="end">text?</text>
+<text class="cname" x="526" y="400.5">delivered_at</text>
+<text class="ctype" x="770" y="400.5" text-anchor="end">timestamptz?</text>
+<line class="hair" x1="490" y1="410" x2="770" y2="410"/>
+<text class="foot" x="492" y="425">≤ 1 identity.account-created per account</text>
+<text class="foot" x="492" y="440">relay retries until delivered_at is set</text>
+<text class="foot" x="492" y="455">attempts ≥ 0 · payload is a JSON object</text>
+</g>
+<g class="tbl">
+<rect class="card" x="70" y="605" width="300" height="224" rx="6"/>
+<path class="head ledger" d="M70,635 V611 Q70,605 76,605 H364 Q370,605 370,611 V635 Z"/>
+<text class="tname" x="82" y="625">wallets</text>
+<text class="tcount" x="360" y="625" text-anchor="end">7 columns</text>
+<line class="hair" x1="70" y1="635" x2="370" y2="635"/>
+<text class="mk-pk" x="79" y="648.0">PK</text>
+<text class="cname pkname" x="116" y="648.5">wallet_id</text>
+<text class="ctype" x="360" y="648.5" text-anchor="end">uuid</text>
+<text class="mk" x="79" y="667.0">FK</text>
+<text class="cname" x="116" y="667.5">account_id</text>
+<text class="ctype" x="360" y="667.5" text-anchor="end">uuid</text>
+<text class="cname" x="116" y="686.5">wallet_type</text>
+<text class="ctype" x="360" y="686.5" text-anchor="end">text</text>
+<text class="cname" x="116" y="705.5">status</text>
+<text class="ctype" x="360" y="705.5" text-anchor="end">text</text>
+<text class="cname" x="116" y="724.5">created_at</text>
+<text class="ctype" x="360" y="724.5" text-anchor="end">timestamptz</text>
+<text class="cname" x="116" y="743.5">updated_at</text>
+<text class="ctype" x="360" y="743.5" text-anchor="end">timestamptz</text>
+<text class="cname" x="116" y="762.5">closed_at</text>
+<text class="ctype" x="360" y="762.5" text-anchor="end">timestamptz?</text>
+<line class="hair" x1="80" y1="772" x2="360" y2="772"/>
+<text class="foot" x="82" y="787">at most one REAL and one BONUS per account</text>
+<text class="foot" x="82" y="802">status: ACTIVE · FROZEN · CLOSED</text>
+<text class="foot" x="82" y="817">closed_at set exactly when CLOSED</text>
+</g>
+<g class="tbl">
+<rect class="card" x="480" y="605" width="300" height="186" rx="6"/>
+<path class="head ledger" d="M480,635 V611 Q480,605 486,605 H774 Q780,605 780,611 V635 Z"/>
+<text class="tname" x="492" y="625">account_balances</text>
+<text class="tcount" x="770" y="625" text-anchor="end">5 columns</text>
+<line class="hair" x1="480" y1="635" x2="780" y2="635"/>
+<text class="mk-pk" x="489" y="648.0">PK</text>
+<text class="cname pkname" x="526" y="648.5">account_id</text>
+<text class="ctype" x="770" y="648.5" text-anchor="end">uuid</text>
+<text class="cname" x="526" y="667.5">posted_balance</text>
+<text class="ctype" x="770" y="667.5" text-anchor="end">numeric(20,4)</text>
+<text class="cname" x="526" y="686.5">held_total</text>
+<text class="ctype" x="770" y="686.5" text-anchor="end">numeric(20,4)</text>
+<text class="cname" x="526" y="705.5">debt_total</text>
+<text class="ctype" x="770" y="705.5" text-anchor="end">numeric(20,4)</text>
+<text class="cname" x="526" y="724.5">updated_at</text>
+<text class="ctype" x="770" y="724.5" text-anchor="end">timestamptz</text>
+<line class="hair" x1="490" y1="734" x2="770" y2="734"/>
+<text class="foot" x="492" y="749">check: posted − held ≥ 0</text>
+<text class="foot" x="492" y="764">held ≥ 0 · debt ≥ 0</text>
+<text class="foot" x="492" y="779">row opens with the account&#x27;s first wallet</text>
+</g>
+<g class="tbl">
+<rect class="card" x="890" y="605" width="300" height="224" rx="6"/>
+<path class="head ledger" d="M890,635 V611 Q890,605 896,605 H1184 Q1190,605 1190,611 V635 Z"/>
+<text class="tname" x="902" y="625">reservations</text>
+<text class="tcount" x="1180" y="625" text-anchor="end">7 columns</text>
+<line class="hair" x1="890" y1="635" x2="1190" y2="635"/>
+<text class="mk-pk" x="899" y="648.0">PK</text>
+<text class="cname pkname" x="936" y="648.5">reservation_id</text>
+<text class="ctype" x="1180" y="648.5" text-anchor="end">uuid</text>
+<text class="mk" x="899" y="667.0">FK</text>
+<text class="cname" x="936" y="667.5">account_id</text>
+<text class="ctype" x="1180" y="667.5" text-anchor="end">uuid</text>
+<text class="cname" x="936" y="686.5">amount</text>
+<text class="ctype" x="1180" y="686.5" text-anchor="end">numeric(20,4)</text>
+<text class="cname" x="936" y="705.5">state</text>
+<text class="ctype" x="1180" y="705.5" text-anchor="end">text</text>
+<text class="mk" x="899" y="724.0">UQ</text>
+<text class="cname" x="936" y="724.5">idempotency_key</text>
+<text class="ctype" x="1180" y="724.5" text-anchor="end">text</text>
+<text class="cname" x="936" y="743.5">created_at</text>
+<text class="ctype" x="1180" y="743.5" text-anchor="end">timestamptz</text>
+<text class="cname" x="936" y="762.5">expires_at</text>
+<text class="ctype" x="1180" y="762.5" text-anchor="end">timestamptz</text>
+<line class="hair" x1="900" y1="772" x2="1180" y2="772"/>
+<text class="foot" x="902" y="787">HELD · SETTLED · RELEASED · EXPIRED</text>
+<text class="foot" x="902" y="802">idempotency_key unique</text>
+<text class="foot" x="902" y="817">amount &gt; 0 · expires_at &gt; created_at</text>
+</g>
+<g class="tbl">
+<rect class="card" x="70" y="887" width="300" height="364" rx="6"/>
+<path class="head ledger" d="M70,917 V893 Q70,887 76,887 H364 Q370,887 370,893 V917 Z"/>
+<text class="tname" x="82" y="907">balance_buckets</text>
+<text class="tcount" x="360" y="907" text-anchor="end">12 columns</text>
+<line class="hair" x1="70" y1="917" x2="370" y2="917"/>
+<text class="mk-pk" x="79" y="930.0">PK</text>
+<text class="cname pkname" x="116" y="930.5">bucket_id</text>
+<text class="ctype" x="360" y="930.5" text-anchor="end">uuid</text>
+<text class="mk" x="79" y="949.0">FK</text>
+<text class="cname" x="116" y="949.5">account_id</text>
+<text class="ctype" x="360" y="949.5" text-anchor="end">uuid</text>
+<text class="cname" x="116" y="968.5">bucket_type</text>
+<text class="ctype" x="360" y="968.5" text-anchor="end">text</text>
+<text class="cname" x="116" y="987.5">source_module</text>
+<text class="ctype" x="360" y="987.5" text-anchor="end">text?</text>
+<text class="cname" x="116" y="1006.5">grant_id</text>
+<text class="ctype" x="360" y="1006.5" text-anchor="end">uuid?</text>
+<text class="cname" x="116" y="1025.5">posted_balance</text>
+<text class="ctype" x="360" y="1025.5" text-anchor="end">numeric(20,4)</text>
+<text class="cname" x="116" y="1044.5">held_total</text>
+<text class="ctype" x="360" y="1044.5" text-anchor="end">numeric(20,4)</text>
+<text class="cname" x="116" y="1063.5">withdrawable</text>
+<text class="ctype" x="360" y="1063.5" text-anchor="end">boolean</text>
+<text class="cname" x="116" y="1082.5">wagering_remaining</text>
+<text class="ctype" x="360" y="1082.5" text-anchor="end">numeric(20,4)</text>
+<text class="cname" x="116" y="1101.5">spend_priority</text>
+<text class="ctype" x="360" y="1101.5" text-anchor="end">smallint</text>
+<text class="cname" x="116" y="1120.5">expires_at</text>
+<text class="ctype" x="360" y="1120.5" text-anchor="end">timestamptz?</text>
+<text class="mk" x="79" y="1139.0">FK</text>
+<text class="cname" x="116" y="1139.5">wallet_id</text>
+<text class="ctype" x="360" y="1139.5" text-anchor="end">uuid</text>
+<line class="hair" x1="80" y1="1149" x2="360" y2="1149"/>
+<text class="foot" x="82" y="1164">CASH · BONUS · LOYALTY · REFERRAL · DEBT</text>
+<text class="foot" x="82" y="1179">one CASH bucket per account</text>
+<text class="foot" x="82" y="1194">check: posted − held ≥ 0</text>
+<text class="foot" x="82" y="1209">DEBT is never withdrawable</text>
+<text class="foot" x="82" y="1224">its wallet belongs to the same account</text>
+<text class="foot" x="82" y="1239">grant_id unique when set</text>
+</g>
+<g class="tbl">
+<rect class="card" x="480" y="887" width="300" height="243" rx="6"/>
+<path class="head ledger" d="M480,917 V893 Q480,887 486,887 H774 Q780,887 780,893 V917 Z"/>
+<text class="tname" x="492" y="907">ledger_entries</text>
+<text class="tcount" x="770" y="907" text-anchor="end">8 columns</text>
+<line class="hair" x1="480" y1="917" x2="780" y2="917"/>
+<text class="mk-pk" x="489" y="930.0">PK</text>
+<text class="cname pkname" x="526" y="930.5">entry_id</text>
+<text class="ctype" x="770" y="930.5" text-anchor="end">uuid</text>
+<text class="mk" x="489" y="949.0">FK</text>
+<text class="cname" x="526" y="949.5">account_id</text>
+<text class="ctype" x="770" y="949.5" text-anchor="end">uuid</text>
+<text class="mk" x="489" y="968.0">FK</text>
+<text class="cname" x="526" y="968.5">bucket_id</text>
+<text class="ctype" x="770" y="968.5" text-anchor="end">uuid</text>
+<text class="cname" x="526" y="987.5">direction</text>
+<text class="ctype" x="770" y="987.5" text-anchor="end">text</text>
+<text class="cname" x="526" y="1006.5">amount</text>
+<text class="ctype" x="770" y="1006.5" text-anchor="end">numeric(20,4)</text>
+<text class="mk" x="489" y="1025.0">FK</text>
+<text class="cname" x="526" y="1025.5">reservation_id</text>
+<text class="ctype" x="770" y="1025.5" text-anchor="end">uuid?</text>
+<text class="cname" x="526" y="1044.5">transaction_id</text>
+<text class="ctype" x="770" y="1044.5" text-anchor="end">uuid</text>
+<text class="cname" x="526" y="1063.5">created_at</text>
+<text class="ctype" x="770" y="1063.5" text-anchor="end">timestamptz</text>
+<line class="hair" x1="490" y1="1073" x2="770" y2="1073"/>
+<text class="foot" x="492" y="1088">append-only: UPDATE and DELETE do nothing</text>
+<text class="foot" x="492" y="1103">one row per transaction, bucket, direction</text>
+<text class="foot" x="492" y="1118">DEBIT · CREDIT · amount &gt; 0</text>
+</g>
+<g class="tbl">
+<rect class="card" x="890" y="887" width="300" height="133" rx="6"/>
+<path class="head ledger" d="M890,917 V893 Q890,887 896,887 H1184 Q1190,887 1190,893 V917 Z"/>
+<text class="tname" x="902" y="907">reservation_allocations</text>
+<text class="tcount" x="1180" y="907" text-anchor="end">3 columns</text>
+<line class="hair" x1="890" y1="917" x2="1190" y2="917"/>
+<text class="mk-pk" x="899" y="930.0">PK</text>
+<text class="mk" x="916" y="930.0">FK</text>
+<text class="cname pkname" x="936" y="930.5">reservation_id</text>
+<text class="ctype" x="1180" y="930.5" text-anchor="end">uuid</text>
+<text class="mk-pk" x="899" y="949.0">PK</text>
+<text class="mk" x="916" y="949.0">FK</text>
+<text class="cname pkname" x="936" y="949.5">bucket_id</text>
+<text class="ctype" x="1180" y="949.5" text-anchor="end">uuid</text>
+<text class="cname" x="936" y="968.5">amount</text>
+<text class="ctype" x="1180" y="968.5" text-anchor="end">numeric(20,4)</text>
+<line class="hair" x1="900" y1="978" x2="1180" y2="978"/>
+<text class="foot" x="902" y="993">a hold&#x27;s amount, split across buckets</text>
+<text class="foot" x="902" y="1008">amount &gt; 0</text>
+</g>
+<g class="tbl">
+<rect class="card" x="890" y="1066" width="300" height="171" rx="6"/>
+<path class="head ledger" d="M890,1096 V1072 Q890,1066 896,1066 H1184 Q1190,1066 1190,1072 V1096 Z"/>
+<text class="tname" x="902" y="1086">ledger_config</text>
+<text class="tcount" x="1180" y="1086" text-anchor="end">5 columns</text>
+<line class="hair" x1="890" y1="1096" x2="1190" y2="1096"/>
+<text class="mk-pk" x="899" y="1109.0">PK</text>
+<text class="cname pkname" x="936" y="1109.5">singleton</text>
+<text class="ctype" x="1180" y="1109.5" text-anchor="end">boolean</text>
+<text class="cname" x="936" y="1128.5">currency</text>
+<text class="ctype" x="1180" y="1128.5" text-anchor="end">char(3)</text>
+<text class="cname" x="936" y="1147.5">minor_units</text>
+<text class="ctype" x="1180" y="1147.5" text-anchor="end">smallint</text>
+<text class="cname" x="936" y="1166.5">max_hold_seconds</text>
+<text class="ctype" x="1180" y="1166.5" text-anchor="end">integer</text>
+<text class="cname" x="936" y="1185.5">initialized_at</text>
+<text class="ctype" x="1180" y="1185.5" text-anchor="end">timestamptz</text>
+<line class="hair" x1="900" y1="1195" x2="1180" y2="1195"/>
+<text class="foot" x="902" y="1210">exactly one row</text>
+<text class="foot" x="902" y="1225">max_hold_seconds defaults to 30 days</text>
+</g>
+<text class="lhead" x="900" y="76">Legend</text>
+<text class="mk-pk" x="900" y="100">PK</text><text class="ltext" x="944" y="100">primary key</text>
+<text class="mk" x="900" y="120">FK</text><text class="ltext" x="944" y="120">foreign key</text>
+<text class="mk" x="900" y="140">UQ</text><text class="ltext" x="944" y="140">unique on its own</text>
+<text class="ctype-l" x="900" y="160">text?</text><text class="ltext" x="944" y="160">nullable column</text>
+<path class="edge" d="M900,184 H934"/>
+<line class="mark" x1="913.0" y1="184.0" x2="900.0" y2="177.0"/><line class="mark" x1="913.0" y1="184.0" x2="900.0" y2="184.0"/><line class="mark" x1="913.0" y1="184.0" x2="900.0" y2="191.0"/><line class="mark" x1="917.0" y1="190.0" x2="917.0" y2="178.0"/>
+<text class="ltext" x="944" y="188">many (the table holding the key)</text>
+<path class="edge" d="M900,206 H934"/>
+<line class="mark" x1="927.0" y1="200.0" x2="927.0" y2="212.0"/><line class="mark" x1="923.0" y1="200.0" x2="923.0" y2="212.0"/>
+<text class="ltext" x="944" y="210">exactly one</text>
+<path class="edge" d="M900,228 H934"/>
+<line class="mark" x1="927.0" y1="222.0" x2="927.0" y2="234.0"/><circle class="mark-o" cx="919.0" cy="228.0" r="3.6"/>
+<text class="ltext" x="944" y="232">zero or one</text>
+<path class="relay" d="M900,250 H930"/><polygon class="relay-head" points="934.0,250.0 925.0,255.0 925.0,245.0"/>
+<text class="ltext" x="944" y="254">HTTP call, no foreign key</text>
+<text class="lhead" x="900" y="290">Not drawn</text>
+<text class="ltext" x="900" y="312">flyway_schema_history, in both schemas</text>
+<text class="ltext" x="900" y="330">Keycloak&#x27;s own tables in auth_db</text>
+<text class="ltext" x="900" y="348">support_db, transactions_db and fraud_db,</text>
+<text class="ltext" x="900" y="366">which are empty</text>
+<text class="lhead" x="900" y="406">Source</text>
+<text class="ltext" x="900" y="428">PostgreSQL 18.6, after Flyway V1–V3</text>
+<text class="ltext" x="900" y="446">wallet-auth-service 43d0615 (0.12.2)</text>
+<text class="ltext" x="900" y="464">wallet-ledger-service 72c9345 (0.2.1)</text>
+<text class="ltext" x="900" y="482">roles and owners as in gitops apps/db</text>
+</svg>
