@@ -247,6 +247,8 @@ Reporting ETL Service     → datawarehouse_db
 Admin UI                  → No database (aggregates via APIs)
 ```
 
+The two that are deployed, `auth_db` and `vaullet_db`, are drawn table by table in [`docs/schema/README.md`](schema/README.md).
+
 ---
 
 ## Access Control
