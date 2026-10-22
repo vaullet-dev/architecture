@@ -16,7 +16,8 @@ closed — a register nobody prunes stops being read.
 
 Fix before writing the code each one touches. Both are contradictions between accepted decisions,
 not new decisions. **B2** (the anchor's two creation paths) and **B3** (`external_ref` has no column)
-were closed by [ADR-014](014-user-management-in-local-identity-mode.md) on 2026-09-16.
+were closed by [ADR-014](014-user-management-in-local-identity-mode.md) on 2026-09-16, and **B4** (the
+ledger's scope rows) by [ADR-016](016-transactional-outbox-for-event-producers.md) on 2026-10-22.
 
 ### B1 · Withdrawal holds have no lifetime set
 
@@ -32,17 +33,24 @@ were closed by [ADR-014](014-user-management-in-local-identity-mode.md) on 2026-
 - **Fix**: ADR-009 §4 states the withdrawal hold TTL explicitly, as a deployment setting rather than a
   constant — the review SLA belongs to the operator. Blocks the withdrawal path, not the ledger core.
 
-### B4 · `ledger:reserve` scope table is incomplete
+### B5 · `identity.account-created` or `auth.account-created`
 
-- **Where**: [ADR-008](008-service-to-service-authentication.md) Layer 3
-- **What**: the table lists `POST /reservations` and `DELETE /reservations`. `GET /v1/reservations/{id}`
-  was added to ADR-004 on 2026-09-02 and is not in it.
-- **Why it matters**: small, but ADR-008's whole argument is that the money path is enumerated
-  explicitly. An endpoint missing from the enumeration is either unauthorized or silently ungoverned.
-  The auth service met the sharper version of this on 2026-09-17: the table is what the Keycloak
-  client scopes are generated from, so a missing row means no token ever carries the scope and every
-  call 403s. Its two rows were added; this one was not.
-- **Fix**: one row. Decide whether reading a reservation needs `ledger:reserve` or a read scope.
+- **Where**: [ADR-007](007-kafka-topics-and-event-schema-evolution.md) §1–§2 and §8, against
+  [ADR-014](014-user-management-in-local-identity-mode.md) §7 and
+  [ADR-016](016-transactional-outbox-for-event-producers.md) §6
+- **What**: ADR-007 names a topic's domain after the service that produces it, renamed
+  `user.registered` to `auth.user-registered.v1`, and lists `auth.*` among the operational topics.
+  ADR-014 §7 named Auth Service's first event `identity.account-created.v1`, and wallet-auth-service
+  0.12.0 shipped it under that name.
+- **Why it matters**: the name is no longer free. V3's backfill wrote `identity.account-created` into
+  every production outbox row, and the table's `CHECK` and its partial unique index name it, so a
+  rename is now a migration of `auth_db` — every row, the constraint and the index — plus the constant
+  in `Outbox`. Once the relay publishes to Kafka it becomes a new topic and a dual-publishing window
+  (ADR-007 §4).
+- **Fix**: pick one before the relay publishes to Kafka. Keeping `identity` reads ADR-007's domain as
+  the bounded context rather than the service, and moves §2's `auth.user-registered.v1` and §8's
+  `auth.*` with it; choosing `auth` costs the migration above. Blocks the Kafka relay, not the HTTP
+  one running today.
 
 ---
 
@@ -145,6 +153,8 @@ Not scheduled. Recorded so they are not rediscovered as surprises.
 | **G3** | **Fourteen services is a lot for a solo project.** The module boundaries have commercial justification, but "sellable unit" and "separately deployed service" are not the same thing | ADR-005 | Accepted deliberately. The mitigation is build order, not architecture — ledger first, extract shared CI at the second service |
 | **G4** | **Warehouse rebuild has no source beyond 90 days.** ADR-007 bounded money-topic retention on 2026-09-17, so ADR-003's "rebuildable from events" holds for 90 days only. The proposed resolution — rebuild from `vaullet_db`, which is the actual system of record — is written in ADR-007 §8 but **not yet recorded in ADR-003** | ADR-003, ADR-007 §8 | Decide before Reporting ETL is built. The retention number itself is settled |
 | **G5** | **Nothing enforces a coherent contract version set.** Six independently versioned artifacts mean a service can run `contracts-ledger` 2.3 with `contracts-transaction` 1.9. An architecture test forbids a *cycle*; nothing checks the *set* | ADR-002 | Candidate: a BOM the services import, so the set is chosen once |
+| **G6** | **`ledger:write` is one scope for every change on the ledger** — opening, freezing and closing wallets, and placing and releasing holds, on any account. Auth Service's outbox relay holds it to open wallets, so its token could also place holds, and no NetworkPolicy or mesh narrows who can reach the ledger yet (ADR-008 Layers 1–2 are not deployed). ADR-008's `ledger:reserve` for the money path does not exist in the realm | ADR-008 Layer 3, ADR-016 §4, gitops `realm/15-vaullet-client-scopes.yaml` | Accepted while the relay is the only service holding it. Candidate: split it — `ledger:reserve` for holds, as ADR-008 already names, and a wallet scope the relay holds alone — before a second service is given `ledger:write` |
+| **G7** | **The relay's token also passes Keycloak's Admin API.** The relay authenticates as `wallet-auth-service`, whose service account holds `manage-users`, `view-users` and `view-realm`; with `fullScopeAllowed` those roles are in every token the client gets, so the token the ledger receives could manage the realm's users | ADR-016 §4, ADR-014 *Keycloak specifics*, gitops `realm/30-wallet-auth-service.yaml` | Accepted until Kafka, when the relay stops sending tokens anywhere. Candidate, checked on Keycloak 26.7.4: `fullScopeAllowed: false` with the three roles behind an optional scope that only the Admin API calls ask for — or a second client for the relay |
 
 ---
 
@@ -172,10 +182,11 @@ the trigger is not forgotten.
 | **R5** | PostgreSQL for `datawarehouse_db` (ADR-003) | Reporting queries exceed ~5s → ClickHouse or TimescaleDB |
 | **R6** | 12 partitions on money topics (ADR-007 §6) | Increasing is a one-way door — changing it remaps keys to partitions |
 | **R7** | Identity reads are a pure facade over the Keycloak Admin API (ADR-014 *Alternative 1*) | An Admin UI user list exceeds ~1s, or an operator asks for a filter spanning `status` and a profile field → add a rebuildable read projection |
-| **R8** | No outbox: events are published after the commit, so a crash between the two loses one (surfaced by ADR-014 §7) | Before a **second** event producer exists. The ledger's idempotent upsert makes the first case self-repairing by accident, not by design |
+| **R9** | Until Kafka, Auth Service's outbox relay delivers `identity.account-created` over HTTP, as the ledger's `POST /v1/wallets` (ADR-016 §4) | Kafka is deployed, a second consumer of the event appears, or a second event type is queued — whichever comes first. HTTP delivery reaches one consumer, by URL, and nothing keeps an account's rows in order |
 
 ---
 
 **Maintenance**: reviewed whenever an ADR is accepted or revised. Last full pass 2026-09-02, against
 ADRs 001–012 and `arch.md`. B2/B3 pruned 2026-09-16 on ADR-014; R8 added 2026-09-17 when the auth
-service's first event producer made the outbox gap concrete.
+service's first event producer made the outbox gap concrete. B4 and R8 pruned 2026-10-22 on ADR-016,
+which added B5, G6, G7 and R9.
