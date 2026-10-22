@@ -48,7 +48,7 @@ than the excuse.
 |---|---|
 | [`arch.md`](arch.md) | System architecture — services, data flows, event topology, market positioning |
 | [`docs/schema/README.md`](docs/schema/README.md) | The two deployed databases, `auth_db` and `vaullet_db`, as their migrations leave them |
-| [`docs/adr/README.md`](docs/adr/README.md) | Twelve architecture decision records, indexed |
+| [`docs/adr/README.md`](docs/adr/README.md) | Sixteen architecture decision records, indexed |
 | [`docs/adr/TODO.md`](docs/adr/TODO.md) | Everything unresolved, with IDs — contradictions, open decisions, accepted gaps |
 | [`docs/adr/HOW-TO-WRITE-ADRS.md`](docs/adr/HOW-TO-WRITE-ADRS.md) | The writing standard these follow |
 
@@ -101,6 +101,11 @@ decision record is *for*, and it is the reason this repository exists before any
   still exists in retained messages. REST DTOs keep Java as the source.
   ([ADR-002](docs/adr/002-shared-contracts-versioning-strategy.md),
   [ADR-007](docs/adr/007-kafka-topics-and-event-schema-evolution.md))
+- **No event is lost between a commit and its publication.** A producer writes each event into an
+  outbox in the transaction that makes the change, and a relay delivers it afterwards, retrying until
+  it lands. Until there is Kafka, Auth Service's relay delivers its one event as the ledger's
+  `POST /v1/wallets`, which is how every account gets its `REAL` and `BONUS` wallets.
+  ([ADR-016](docs/adr/016-transactional-outbox-for-event-producers.md))
 - **Identity is not written here.** Keycloak per cluster; Vaullet keeps an account anchor and nothing
   else, so under federation the operator keeps their PII and the seven-year ledger is never keyed on a
   foreign, mutable subject claim. ([ADR-006](docs/adr/006-authentication-and-identity.md))
@@ -218,7 +223,7 @@ A platform-wide observability decision is [still open](docs/adr/TODO.md).
 | ADR-010 §11 | ESO syncs from the customer's own secret store | ESO syncs from OpenBao in the cluster. A customer's own store stays possible by changing the store's provider |
 | ADR-010 | Flyway runs as a Helm pre-upgrade Job | Flyway runs when the service starts |
 | ADR-003 | One schema per service | Under review: one database per service |
-| ADR-004 | Balance buckets inside the ledger | Being replaced by separate accounts (cash, bonus) |
+| ADR-004 | Balance buckets inside the ledger | Still true, and grouped into wallets: one `REAL` and one `BONUS` per account, since wallet-ledger-service 0.1.0 (ADR-004, amended 2026-10-22) |
 | ADR-005, ADR-010 | Module composition with Helm and Terraform | Argo CD Applications over Helm and Kustomize, no Terraform |
 
 ## What this is not
@@ -270,11 +275,11 @@ a design-phase one.
 
 | | |
 |---|---|
-| Architecture | 14 ADRs, 1 superseded, reconciled against each other on 2026-09-02 |
+| Architecture | 16 ADRs — 1 superseded, 1 proposed; 001–012 reconciled against each other on 2026-09-02 |
 | Implementation | Two services with code, neither deployed — [ledger](../wallet-ledger-service) (reservations) and [auth](../wallet-auth-service) (the account anchor), on a shared [backend-common](../backend-common) |
 | Tests | 44 integration tests against real PostgreSQL: 18 ledger, 26 auth |
 | Cluster | Argo CD and OpenBao running; no PostgreSQL, no Keycloak, no service deployed |
-| Open items | [24 tracked](docs/adr/TODO.md) — 16 open, 8 deferred with triggers; 2 are blocking |
+| Open items | [27 tracked](docs/adr/TODO.md) — 19 open, 8 deferred with triggers; 2 are blocking |
 
 A private portfolio project, built to production-grade B2B standards: the goal is an architecture that
 survives review by a senior engineer, not a system that currently ships.

@@ -7,6 +7,10 @@
 Extends the Category 4 identity adapter in [ADR-006](006-authentication-and-identity.md).
 Amends ADR-006's `accounts` DDL and closes open items **B2** and **B3**.
 
+**Amended by [ADR-016](016-transactional-outbox-for-event-producers.md)** (2026-10-22): §7 — the
+account-created event is written to an outbox in the account's own transaction and, until there is
+Kafka, delivered as the ledger's `POST /v1/wallets` for `REAL` and then `BONUS`.
+
 ## Context
 
 [ADR-006](006-authentication-and-identity.md) sells to two operator shapes: those who bring their own
@@ -229,6 +233,24 @@ otherwise opens.
 > deposit repairs it — but by accident rather than by design, and every event producer added after
 > this one meets the same gap. It deserves a decision before the second producer exists.
 
+> **Amended 2026-10-22 by [ADR-016](016-transactional-outbox-for-event-producers.md) — as built in
+> wallet-auth-service 0.12.0.**
+>
+> - **The event is an outbox row**, written in the transaction that inserts the anchor, so it exists
+>   exactly when the account does. The gap in the note above is closed (it was **R8**).
+> - **The ledger opens wallets rather than upserting a row.** It grew wallets
+>   (wallet-ledger-service#10): `POST /v1/wallets` opens an account's `REAL` or `BONUS` wallet, and
+>   with the account's first, its `account_balances` row; a `REAL` wallet starts with the singleton
+>   `CASH` bucket. Every account gets both wallets.
+> - **There is no Kafka yet**, so a relay in Auth Service delivers the row as those two calls, `REAL`
+>   then `BONUS`, with a token carrying `ledger:write`. Until Kafka the ledger therefore accepts the
+>   write from the identity adapter that the rejection above objected to; creating an account still
+>   never waits for the ledger. When Kafka arrives the relay publishes `identity.account-created.v1`
+>   and the ledger's consumer opens the wallets (**R9**).
+> - **The lazy fallback does not exist yet**: the ledger has no credit path for it to ride on.
+> - **Accounts that predate the outbox** were queued by V3's backfill; one the previous version
+>   created during the rollout is queued by the relay's sweep.
+
 ### 8. Closing an account
 
 `DELETE /v1/accounts/{id}` sets `status = 'CLOSED'`, deletes the Keycloak user, and touches no
@@ -409,9 +431,12 @@ end users edit their profile in Keycloak's account console.
   migration ran anywhere.
 - ADR-012: `PATCH /v1/accounts/{id}` status values already read `SUSPENDED` and need no change.
 - ADR-011: this ADR's §6 records the one endpoint exempt from the `Idempotency-Key` rule, and why.
-- ADR-007: §7 needs a topic for `identity.account-created.v1`, plus a decision on the missing outbox.
+- ADR-007: §7 needs a topic for `identity.account-created.v1`, plus a decision on the missing outbox
+  — both made 2026-10-22 by [ADR-016](016-transactional-outbox-for-event-producers.md): the topic is in
+  ADR-007's §9 inventory, and the outbox is its new §11.
 - ADR-008: Layer 3 gains `identity:read` and `identity:admin` — added 2026-09-17.
-- TODO.md: **B2** and **B3** close with this ADR. **B4** remains.
+- TODO.md: **B2** and **B3** close with this ADR. **B4** remains — closed 2026-10-22 by ADR-016's
+  Layer 3 rows for the ledger.
 
 ## References
 

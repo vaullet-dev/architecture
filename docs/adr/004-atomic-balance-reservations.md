@@ -9,6 +9,11 @@ from funding; the journal stated as single-sided
 
 Supersedes [ADR-001](001-distributed-locking-for-balance-consistency.md).
 
+**Amended by [ADR-016](016-transactional-outbox-for-event-producers.md)** (2026-10-22): buckets are
+grouped into wallets as built in wallet-ledger-service, and an account's rows here are created when
+its first wallet is opened — which Auth Service's outbox relay does for every account it creates. See
+*Balance buckets*.
+
 ## Context
 
 [ADR-001](001-distributed-locking-for-balance-consistency.md) decided to prevent overdrafts using Redis distributed locks held by Transaction Service around a balance check. Reviewing that decision before implementation, we found it does not prevent the failure it was written to prevent.
@@ -109,6 +114,22 @@ A single `posted_balance` scalar cannot express "the account holds $100, but $60
 Buckets are per *grant*, not per type: a user can hold three separate `BONUS` buckets with different wagering requirements and expiry dates, because that is what the terms of three separate promotions actually mean.
 
 **The ledger is authoritative about amounts and dumb about policy.** It stores `wagering_remaining` but never decides how a wager contributes to it — that is the Bonus module's rule, applied by emitting events. This keeps promotional logic out of the service that must stay correct when Bonus isn't deployed.
+
+> **Amended 2026-10-22 by [ADR-016](016-transactional-outbox-for-event-producers.md): wallets, and
+> who opens them** — as built in wallet-ledger-service 0.1.0 (#10).
+>
+> - **Buckets are grouped into wallets.** One `REAL` wallet per account holds `CASH` (and `DEBT`, once
+>   ADR-009 creates one); one `BONUS` wallet holds the promotional buckets. A wallet groups buckets
+>   and does not replace them: allocation by spend priority, the single `account_balances` lock and
+>   the journal are as above. What a wallet adds is a status — `ACTIVE`, `FROZEN`, `CLOSED` — and
+>   reservations skip the buckets of a wallet that is not `ACTIVE`.
+> - **Opening a wallet opens the account.** `POST /v1/wallets` (`ledger:write`, one wallet per type
+>   per account, so a repeat returns the existing one) creates the `account_balances` row with the
+>   account's first wallet, and a `REAL` wallet starts with its `CASH` bucket. "`CASH` always exists"
+>   holds from the moment the `REAL` wallet is opened.
+> - **Auth Service opens both** for every account it creates, through its outbox (ADR-016 §4).
+>
+> `V2__wallets.sql` and the service README's *Wallets* are the detail.
 
 ### Currency
 
@@ -611,6 +632,19 @@ returns state, allocations and `expires_at`, so a two-phase caller can see what 
 `POST /v1/reservations` takes an explicit `currency` and returns `422 CURRENCY_MISMATCH` if it does
 not equal `ledger_config.currency`. `GET /v1/accounts/{id}/balance` returns the currency alongside
 every amount, so no caller has to infer it from configuration.
+
+Added with wallets (amended 2026-10-22, see *Balance buckets*):
+
+```
+POST   /v1/wallets                → 201 the wallet, opened or existing | 409 WALLET_CLOSED
+GET    /v1/wallets                → 200 {data[], next_cursor}
+GET    /v1/wallets/{id}           → 200 the wallet
+PATCH  /v1/wallets/{id}           → 200 (ACTIVE ↔ FROZEN) | 409 WALLET_CLOSED
+DELETE /v1/wallets/{id}           → 204 (close, only when empty) | 409 WALLET_NOT_EMPTY
+GET    /v1/wallets/{id}/balance   → {currency, posted, held, available, withdrawable, debt, buckets[]}
+```
+
+The scopes for every ledger endpoint are in [ADR-008](008-service-to-service-authentication.md) Layer 3.
 
 ### Revised transaction flow
 

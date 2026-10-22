@@ -19,6 +19,10 @@ its entry for the reasoning, which reverses the initial lean.
 Closes the item [ADR-006](006-authentication-and-identity.md) explicitly deferred: that ADR settled
 *user* identity and assumed services inside a cluster were mutually authenticated, without saying how.
 
+**Amended by [ADR-016](016-transactional-outbox-for-event-producers.md)** (2026-10-22): Layer 3 gains
+the ledger's scopes as built, `ledger:read` and `ledger:write` — Auth Service's outbox relay among the
+callers, and `GET /v1/reservations/{id}` among the reads, which closes **B4**.
+
 ## Context
 
 Vaullet runs 14 services in one Kubernetes cluster per customer, communicating over REST for
@@ -148,6 +152,9 @@ scope.
 | Admin UI → Risk Management account freeze | `risk:act` |
 | Admin UI, operator backend → Auth `GET /v1/accounts/**` | `identity:read` |
 | Admin UI, operator backend → Auth `POST`, `PATCH`, `PUT`, `DELETE /v1/accounts/**` | `identity:admin` |
+| Auth Service, outbox relay → Ledger `POST /v1/wallets` | `ledger:write` |
+| Operators by hand (client `ledger-ops`) → Ledger every `POST`, `PATCH`, `DELETE` | `ledger:write` |
+| Any caller reading the ledger — today only operators, by hand, as `ledger-ops` → Ledger every `GET`: `/v1/reservations/{id}`, `/v1/accounts/{id}/balance`, `/v1/wallets/**` | `ledger:read` |
 
 > **Added 2026-09-17** with [ADR-014](014-user-management-in-local-identity-mode.md). The two rows are
 > not paperwork: this table is the source the Keycloak client scopes and the mesh policy are generated
@@ -159,6 +166,21 @@ scope.
 > Scope alone is not the whole rule. Auth Service also requires `SUPER_ADMIN` to create an account and
 > `FRAUD_REVIEWER` to change its status, because ADR-006's separation of duties is what keeps user
 > administration from being able to lift a fraud freeze.
+
+> **Added 2026-10-22** with [ADR-016](016-transactional-outbox-for-event-producers.md). The last three
+> rows are the ledger's scopes as wallet-ledger-service checks them and gitops'
+> `realm/15-vaullet-client-scopes.yaml` defines them: `ledger:read` on every read, `ledger:write` on
+> every change. Reading a reservation needs `ledger:read`, which closes **B4**.
+>
+> Two things here do not agree yet, and are recorded rather than resolved:
+>
+> - **The money path's scope.** The first row names `ledger:reserve`. No such scope exists in the
+>   realm, and the ledger checks `ledger:write` on `POST` and `DELETE /v1/reservations`. Transaction
+>   Service does not exist yet, so nothing is wrong today; but `ledger:write` opens, freezes and closes
+>   wallets as well as holding money, and the outbox relay holds it. **G6** in [TODO.md](TODO.md).
+> - **Layers 1 and 2 are not deployed yet.** There is no NetworkPolicy and no mesh in the cluster, so
+>   on the ledger this scope check is the only control between a pod and any account; the ledger's
+>   lack of a public route is what keeps it inside the cluster.
 
 > **Removed (2026-09-01)**: an earlier draft also granted `ledger:adjust` for "Vaullet manual
 > adjustments". No such endpoint exists — [ADR-004](004-atomic-balance-reservations.md)'s API is

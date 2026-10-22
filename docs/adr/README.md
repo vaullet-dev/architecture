@@ -53,6 +53,7 @@ ADRs document important architectural decisions made during the development of t
 | [013](013-backend-common-shared-library.md) | `backend-common` — Shared Runtime Plumbing, Split by Dependency Footprint | ✅ Accepted (revised) | 2026-09-06 |
 | [014](014-user-management-in-local-identity-mode.md) | User Management in Local Identity Mode | ✅ Accepted (revised) | 2026-09-17 |
 | [015](015-cluster-topology-three-servers-on-one-machine.md) | Cluster Topology — Three RKE2 Servers on One Machine | ✅ Accepted | 2026-09-17 |
+| [016](016-transactional-outbox-for-event-producers.md) | Transactional Outbox for Event Producers | 🟡 Proposed | 2026-10-22 |
 
 ## The 2026-09-02 pre-implementation review
 
@@ -84,10 +85,11 @@ re-evaluations that are not decisions in their own right, is in **[TODO.md](TODO
 - [ ] **D7** · Platform-wide observability
 - [ ] **D8** · Operator reporting surface (dashboard vs API vs widgets)
 
-TODO.md also tracks the items (**B1**, **B4**) that are *not* new decisions but contradictions between
+TODO.md also tracks the items (**B1**, **B5**) that are *not* new decisions but contradictions between
 accepted ones, and must be fixed before the code they touch is written. **B2** and **B3** closed with
 [ADR-014](014-user-management-in-local-identity-mode.md), whose first implementation slice — the
-account anchor in `wallet-auth-service` — is written and tested as of 2026-09-17.
+account anchor in `wallet-auth-service` — is written and tested as of 2026-09-17. **B4** closed with
+[ADR-016](016-transactional-outbox-for-event-producers.md) on 2026-10-22.
 
 Vaullet's ledger schema is **not** on this list: it is specified in [ADR-004](004-atomic-balance-reservations.md)
 and is ready to implement.

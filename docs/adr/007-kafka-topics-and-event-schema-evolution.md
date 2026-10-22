@@ -9,6 +9,10 @@ extended with the events introduced by ADRs 004 and 009
 Extends [ADR-002](002-shared-contracts-versioning-strategy.md), which versions the shared-contracts
 *artifact* but says nothing about the wire.
 
+**Amended by [ADR-016](016-transactional-outbox-for-event-producers.md)** (2026-10-22): a new §11 —
+producers write events to a transactional outbox and never publish after the commit — and
+`identity.account-created.v1` in the §9 inventory.
+
 ## Context
 
 Vaullet is event-driven by design, and [ADR-005](005-module-composition-and-deployment-topology.md)
@@ -263,6 +267,7 @@ the inventory stays in one place:
 | `withdrawal.requested.v1` · `withdrawal.approved.v1` · `withdrawal.confirmed.v1` · `withdrawal.failed.v1` | ADR-009 | Money movement |
 | `chargeback.received.v1` · `chargeback.resolved.v1` | ADR-009 | Money movement; produces the `DEBT` bucket |
 | `ledger.hold-expired.v1` | [ADR-004](004-atomic-balance-reservations.md) | A reservation released without capture. For a long two-phase hold this is a business event the operator must be told about, not cleanup noise |
+| `identity.account-created.v1` | [ADR-014](014-user-management-in-local-identity-mode.md) §7, [ADR-016](016-transactional-outbox-for-event-producers.md) | Produced through Auth Service's outbox (§11); keyed on `account_id` (§6). Until there is Kafka, delivered over HTTP as the ledger's `POST /v1/wallets` (ADR-016 §4). The domain segment contradicts §1–§2 and is open: **B5** in [TODO.md](TODO.md) |
 
 The `deposit.*`, `withdrawal.*` and `chargeback.*` domains are money movement for retention purposes
 (§8) and key on `account_id` (§6).
@@ -275,6 +280,25 @@ The `deposit.*`, `withdrawal.*` and `chargeback.*` domains are money movement fo
 a counter on a dashboard nobody watches. DLQ depth > 0 on a money-movement topic is an alert, not a
 metric. Replay is manual and audited, because automatic replay of a poison pill reproduces the
 failure.
+
+### 11. Producing: through a transactional outbox
+
+*Added 2026-10-22 by [ADR-016](016-transactional-outbox-for-event-producers.md).*
+
+**A producer never publishes after its commit, and never from inside its transaction.** It writes the
+event — §3's envelope, one column per field — into an outbox table in its own schema, in the
+transaction that makes the change the event describes. A relay in the same service publishes it
+afterwards.
+
+- Published after the commit, an event is lost when the process dies in between; published inside the
+  transaction, it can announce a change that then rolls back. Written in the transaction, it exists
+  exactly when the change does.
+- The relay delivers at least once, so §3's dedupe on `event_id` is what makes it safe, and §10 binds
+  the relay too: a row is retried until it is delivered, never dropped, and the age of the oldest
+  pending row is the alert.
+- The relay publishes keyed as §6 says, and keeps one aggregate's rows in order.
+- Until there is a broker, a relay may deliver to an event's one consumer as the HTTP calls that
+  consumer would make (ADR-016 §4). When Kafka arrives the relay changes; the table does not.
 
 ## Consequences
 
