@@ -153,8 +153,12 @@ scope.
 | Admin UI, operator backend → Auth `GET /v1/accounts/**` | `identity:read` |
 | Admin UI, operator backend → Auth `POST`, `PATCH`, `PUT`, `DELETE /v1/accounts/**` | `identity:admin` |
 | Auth Service, outbox relay → Ledger `POST /v1/wallets` | `ledger:write` |
-| Operators by hand (client `ledger-ops`) → Ledger every `POST`, `PATCH`, `DELETE` | `ledger:write` |
+| Operators by hand (client `ledger-ops`) → Ledger `POST /v1/reservations`, `DELETE /v1/reservations/{id}` | `ledger:reserve` |
+| Operators by hand (client `ledger-ops`) → Ledger `POST /v1/wallets`, `PATCH` and `DELETE /v1/wallets/{id}` | `ledger:write` |
 | Any caller reading the ledger — today only operators, by hand, as `ledger-ops` → Ledger every `GET`: `/v1/reservations/{id}`, `/v1/accounts/{id}/balance`, `/v1/wallets/**` | `ledger:read` |
+| End user, through a client people sign in with, with `END_USER` and the `account_id` in the token → Transaction `POST /v1/transactions` (a debit of that account), `GET /v1/transactions/{id}` (one on that account) | `transaction:self` |
+| Operator backend → Transaction `POST /v1/transactions` (a debit or a credit, on any account) | `transaction:write` |
+| Operator backend → Transaction `GET /v1/transactions/{id}` (any transaction) | `transaction:read` |
 
 > **Added 2026-09-17** with [ADR-014](014-user-management-in-local-identity-mode.md). The two rows are
 > not paperwork: this table is the source the Keycloak client scopes and the mesh policy are generated
@@ -178,9 +182,25 @@ scope.
 >   realm, and the ledger checks `ledger:write` on `POST` and `DELETE /v1/reservations`. Transaction
 >   Service does not exist yet, so nothing is wrong today; but `ledger:write` opens, freezes and closes
 >   wallets as well as holding money, and the outbox relay holds it. **G6** in [TODO.md](TODO.md).
+>   **Resolved 2026-10-26**, in the note below.
 > - **Layers 1 and 2 are not deployed yet.** There is no NetworkPolicy and no mesh in the cluster, so
 >   on the ledger this scope check is the only control between a pod and any account; the ledger's
 >   lack of a public route is what keeps it inside the cluster.
+
+> **Added 2026-10-26** with wallet-transaction-service (architecture#7). The first row holds now.
+> Holds have their own scope: the ledger checks `ledger:reserve` on `POST` and
+> `DELETE /v1/reservations` (wallet-ledger-service#23), the realm defines it (gitops#38), and
+> Transaction Service's client is offered it and nothing else (gitops#39). `ledger:write` is left with
+> the wallets, so the outbox relay's token places no hold and Transaction Service's opens no wallet.
+> `ledger-ops` holds both, for staff calling by hand. That closes **G6**.
+>
+> The three `transaction:*` rows are wallet-transaction-service's (its `TransactionAccess`). For an
+> operator backend, `transaction:write` and `transaction:read` are the whole permission, as the
+> ledger's scopes are, so they go to no client people sign in with, and no client holds them yet.
+> `transaction:self` is narrowed by the rest of the token, as Auth Service's `identity:self` is: the
+> `END_USER` role, and the `account_id` that names the one account it reaches. It is a default scope
+> of the clients people sign in with (`bruno`, `swagger-ui`), staff included, which is why the role
+> and the account are part of the rule.
 
 > **Removed (2026-09-01)**: an earlier draft also granted `ledger:adjust` for "Vaullet manual
 > adjustments". No such endpoint exists — [ADR-004](004-atomic-balance-reservations.md)'s API is

@@ -103,6 +103,22 @@ moves to `EXPIRED`, the stake returns to the buckets it came from, and `transact
 delivered to the operator's webhook (from `ledger.hold-expired.v1`). An operator whose capture job
 failed learns it from us rather than from a customer complaint.
 
+> **Added 2026-10-26** with wallet-transaction-service 0.1.0 (architecture#7), its first build of
+> `POST` and `GET /v1/transactions`. Where it differs from this decision, on purpose and for now:
+>
+> - **Types are generic, `DEBIT` and `CREDIT`.** `WAGER` and its relatives come when something treats
+>   them differently.
+> - **It authorizes and stops.** A debit is held, a credit recorded; capture and void are not built,
+>   so an absent `capture` means a hold and `capture: true` is refused (`400 VALIDATION_FAILED`) rather
+>   than held in silence. `true` as the default comes with capture.
+> - **End users call it too**, not only the operator's server of *Who the caller is*: a debit of their
+>   own account, and reading its transactions, with their own token (`transaction:self`, ADR-008).
+> - **The codes are the platform's.** `RESOURCE_NOT_FOUND`, passed through from the ledger, and
+>   `UPSTREAM_UNAVAILABLE`, where §7 lists `ACCOUNT_NOT_FOUND` and `TEMPORARILY_UNAVAILABLE`. One of
+>   the two has to move, and renaming a published code is a breaking change under ADR-011.
+> - **Idempotency keys never expire.** A key is part of the transaction's record, scoped to the
+>   caller (the token's `sub`), where *Idempotency semantics* keeps it for 24 hours.
+
 ### 3. Core resources — present in every deployment
 
 ```

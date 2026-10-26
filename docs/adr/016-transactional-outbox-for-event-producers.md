@@ -161,8 +161,10 @@ do not change. Tracked as **R9**.
 
 **What this accepts in the meantime**: the ledger takes a write from the identity adapter, which
 ADR-014 §7 objected to. The write is the ledger's narrowest — opening a wallet moves no money, and
-repeating it is harmless — but the scope that allows it is not narrow (**G6**), and the token that
-carries it can do more than open wallets (**G7**).
+repeating it is harmless — but the scope that allows it also freezes and closes wallets, and the
+token that carries it can do more than open wallets (**G7**). Until 2026-10-26 the same scope placed
+and released holds too (**G6**); those need `ledger:reserve` now (ADR-008), which the relay is never
+given.
 
 ### 5. Rows no request wrote: the backfill and the sweep
 
@@ -222,8 +224,9 @@ account it is not urgent.
 ⚠️ **The ledger accepts a write from the identity adapter until Kafka**, and Auth Service knows the
 ledger's URL and contract — the coupling the event was meant to avoid. Bounded by **R9**.
 
-⚠️ **`ledger:write` is the only scope that opens a wallet**, so the relay's token could also place and
-release holds, and freeze and close wallets, on any account (**G6**).
+⚠️ **`ledger:write` is the only scope that opens a wallet**, so the relay's token could also freeze and
+close wallets on any account. It cannot hold money: since 2026-10-26 that takes `ledger:reserve`
+(ADR-008), which closed **G6**.
 
 ⚠️ **The relay's token also passes Keycloak's Admin API**, because it comes from the client that
 manages users (**G7**).
@@ -248,7 +251,7 @@ closed before its row was delivered still gets both, empty.
 | The ledger is down, or refuses, for a long time | New accounts cannot be credited | `auth_outbox_oldest_pending_seconds` is the alert; `refused` is logged as an error on every attempt; rows are never given up on |
 | `LEDGER_URL` names something that answers `2xx` | Rows marked delivered with no wallets | Only a `201` naming the account and type asked for counts as done |
 | A replica stalls past its lease | The same row is delivered twice | An outcome is recorded only under its own lease; a repeated open is harmless |
-| The relay's token leaks | Holds and wallet changes on any account, and user management in the realm, until it expires | Short token lifetime; no public route to the ledger; **G6** and **G7** record the narrowing |
+| The relay's token leaks | Wallet changes on any account, and user management in the realm, until it expires | Short token lifetime; no public route to the ledger; no hold without `ledger:reserve`, which the relay is never given; **G7** records the rest |
 | **B5** is settled after the first publish | A topic rename means dual-publishing (ADR-007 §4) | Settle B5 before the relay publishes to Kafka |
 
 ## Alternatives Considered
@@ -379,8 +382,8 @@ per replica. Each delivery logs the account, the event and the correlation id.
    per account it must keep an account's rows in order — the partition key gives that on Kafka, and
    the HTTP relay never had to.
 3. The ledger's consumer opens the wallets, with durable dedupe on `event_id`.
-4. Remove `ledger:write` from the `wallet-auth-service` client. That ends the relay's part of **G6**,
-   and **G7** with it.
+4. Remove `ledger:write` from the `wallet-auth-service` client. That ends the relay's use of the
+   wallets' scope, and **G7** with it. Its part of **G6**, holds, ended on 2026-10-26.
 
 ### The next producer
 
